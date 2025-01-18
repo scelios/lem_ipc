@@ -1,5 +1,9 @@
 *.o
 *.out
+*.a
+.DS_Store
 .vscode
 .vscode/*
 lemipc
+42_lem-ipc/*
+42_lem-ipc
