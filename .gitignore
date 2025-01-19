@@ -1,6 +1,7 @@
 *.o
 *.out
 *.a
+test
 .DS_Store
 .vscode
 .vscode/*

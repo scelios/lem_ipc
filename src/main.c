@@ -44,7 +44,7 @@ bool isLast(sharedMemory *shmaddr)
 	// sem_wait(shmaddr->sem);
 	shmaddr->counter--;
 	// sem_post(shmaddr->sem);
-	return (shmaddr->counter == 0);
+	return (shmaddr->counter == 1);
 }
 
 void cleanSharedRessources(int shmid, sharedMemory *shmaddr)
@@ -167,26 +167,28 @@ int main(int argc, char *argv[])
 	// sem_post(shmaddr->sem);
 
     // Wait until at least 2 instances have attached
+	// printf("Waiting for other processes to attach\n");
     while (shmaddr->counter < 2) {
-		printf("Waiting for other processes to attach\n");
-        sleep(1);
+        usleep(10000);
     }
+	usleep(10000);
+
 
     // Detach from the shared memory segment
+	// printf("is last %d \n", isLast(shmaddr));
     // if (shmdt(shmaddr) == -1) {
     //     perror("shmdt");
     //     exit(1);
     // }
 
     // Remove the shared memory segment if this is the last process
-	printf("is last %d\n", isLast(shmaddr));
-    if (myOrder == 1) {
+    if (isLast(shmaddr) == true) {
         printf("Removing shared memory segment\n");
         if (shmctl(shmid, IPC_RMID, NULL) == -1) {
             perror("shmctl");
             exit(1);
         }
-		// remove_all_ipc();
+		remove_all_ipc();
 		// sem_close(shmaddr->sem);
 		// sem_unlink("/shmaddr_sem");
     }

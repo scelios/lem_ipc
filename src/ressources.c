@@ -51,8 +51,12 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	// sem_wait(shmaddr->sem);
 	if (isFirst == true)
 		shmaddr->counter = 0;
+	if (shmaddr->counter >= MAX_PROCESSES)
+	{
+		printf("Max number of processes reached\n");
+		exit(EXIT_FAILURE);
+	}
 	*myOrder = ++shmaddr->counter;
-	printf("myOrder: %d\n", *myOrder);
 	shmaddr->players[*myOrder].isActive = true;
 	shmaddr->players[*myOrder].team = team;
 	shmaddr->players[*myOrder].x = 0;
