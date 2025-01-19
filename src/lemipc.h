@@ -25,6 +25,9 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+
+#define SHM_NAME "/shm_example"
+#define SEM_NAME "/shmaddr_sem"
 typedef struct msgbuf {
     long mtype;
     char mtext[MSGSZ];
@@ -53,6 +56,7 @@ typedef struct player{
 */
 typedef struct sharedMemory{
 	sem_t *sem;
+	bool launch;
     unsigned short int counter;
 	unsigned short int wichToPlay;
 	unsigned short int nTeams;
