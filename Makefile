@@ -16,7 +16,8 @@ FLAGS    := -pthread
 ################################################################################
 
 # SRCS        :=      ./src/test.c 
-SRCS        :=      ./src/*.c \
+SRCS        :=      ./src/main.c \
+					./src/ressources.c \
 
                           
 OBJS        := $(SRCS:.c=.o)

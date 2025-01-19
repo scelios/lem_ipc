@@ -16,7 +16,7 @@
 #include <semaphore.h>
 #include <sys/sem.h>
 
-#define SHM_KEY 0x1234
+#define SHM_KEY 65
 #define SHM_SIZE 1024
 #define MAX_PROCESSES 20
 #define MSGSZ 128
@@ -58,6 +58,11 @@ typedef struct sharedMemory{
     player players[MAX_PROCESSES];
     char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
+
+/* Ressources */
+bool getSharedRessources(bool *isFirst, int *shmid, sharedMemory **shmaddr, unsigned short int *myOrder);
+void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, bool isFirst);
+
 
 
 #endif
