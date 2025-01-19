@@ -78,6 +78,7 @@ key_t keygen()
     }
     return key;
 }
+
 bool getSharedRessources(bool *isFirst, int *shmid, sharedMemory **shmaddr)
 {
 	// key_t key = keygen();
@@ -107,8 +108,8 @@ int main(int argc, char *argv[])
 {
     int shmid;
     sharedMemory *shmaddr;
-    int my_order;
-    bool is_first_process = false;
+    int myOrder;
+    bool isFirst = false;
 	int msqid;
     key_t key;
     // message_buf sbuf;
@@ -146,7 +147,7 @@ int main(int argc, char *argv[])
         printf("Attached to existing shared memory segment\n");
     } else {
         printf("Created new shared memory segment\n");
-        is_first_process = 1;
+        isFirst = 1;
     }
 
     // Attach to the shared memory segment
@@ -155,7 +156,7 @@ int main(int argc, char *argv[])
         perror("shmat");
         exit(1);
     }*/
-   	if (getSharedRessources(&is_first_process, &shmid, &shmaddr) == false)
+   	if (getSharedRessources(&isFirst, &shmid, &shmaddr) == false)
 	{
 		perror("getSharedResources");
         exit(EXIT_FAILURE);
@@ -164,7 +165,7 @@ int main(int argc, char *argv[])
 	
 	sem_wait(sem);
     // If this is the first process, initialize the shared memory
-    if (is_first_process) {
+    if (isFirst) {
 		printf("first_process\n");
         shmaddr->counter = 1;
         // shmaddr->order[0] = getpid();
@@ -175,12 +176,12 @@ int main(int argc, char *argv[])
 		// } else {
 		// 	printf("Message sent: %s\n", sbuf.mtext);
 		// }
-        my_order = 1;
+        myOrder = 1;
     } else {
         // Increment the counter and record the order of arrival
 		printf("not first process\n");
-        my_order = ++shmaddr->counter;
-        // shmaddr->order[my_order - 1] = getpid();
+        myOrder = ++shmaddr->counter;
+        // shmaddr->order[myOrder - 1] = getpid();
 		// if (msgrcv(msqid, &rbuf, MSGSZ, 1, 0) < 0) {
 		// 	perror("msgrcv");
 		// 	exit(1);
@@ -189,9 +190,9 @@ int main(int argc, char *argv[])
 		// }
         // printf("Shared memory content: %s\n", shmaddr->message);
     }
-	printf("counter: %d Order: %d\n", shmaddr->counter, my_order);
+	printf("counter: %d Order: %d\n", shmaddr->counter, myOrder);
 	sem_post(sem);
-    // printf("Process %d arrived as number %d %d\n", getpid(), my_order, shmaddr->counter);
+    // printf("Process %d arrived as number %d %d\n", getpid(), myOrder, shmaddr->counter);
 
     // Wait until at least 2 instances have attached
 	// printf("Waiting for other processes to attach\n");
@@ -207,7 +208,7 @@ int main(int argc, char *argv[])
     }
 
     // Remove the shared memory segment if this is the last process
-    if (my_order == 1) {
+    if (myOrder == 1) {
         printf("Removing shared memory segment\n");
         if (shmctl(shmid, IPC_RMID, NULL) == -1) {
             perror("shmctl");

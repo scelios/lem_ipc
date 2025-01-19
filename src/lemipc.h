@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include <sys/sem.h>
+#include <errno.h>
 
 #define SHM_KEY 65
 #define SHM_SIZE 1024
