@@ -1,4 +1,5 @@
 #include "lemipc.h"
+sem_t *sem;
 
 bool ft_str_is_numeric(const char *str)
 {
@@ -22,7 +23,7 @@ bool checkArgs(int argc, char *argv[])
 	}
 	if (ft_strlen(argv[1]) > 2)
 	{
-		printf("team_number must be between 1 and %d\n", MAX_PROCESSES / 2);
+		printf("team_number must be between 1 and %d\n", MAX_TEAM);
 		return false;
 	}
 	if (ft_str_is_numeric(argv[1]) == false)
@@ -31,9 +32,9 @@ bool checkArgs(int argc, char *argv[])
 		return false;
 	}
 	int teamNumber = ft_atoi(argv[1]);
-	if (teamNumber < 1 || teamNumber > MAX_PROCESSES / 2)
+	if (teamNumber < 1 || teamNumber > MAX_TEAM)
 	{
-		printf("team_number must be between 1 and %d\n", MAX_PROCESSES / 2);
+		printf("team_number must be between 1 and %d\n", MAX_TEAM);
 		return false;
 	}
 	return true;
@@ -41,160 +42,110 @@ bool checkArgs(int argc, char *argv[])
 
 bool isLast(sharedMemory *shmaddr)
 {
-	// sem_wait(shmaddr->sem);
+	bool last = false;
+	sem_wait(sem);
 	shmaddr->counter--;
-	// sem_post(shmaddr->sem);
-	return (shmaddr->counter == 1);
+	last = shmaddr->counter <= 1 ? true : false;
+	sem_post(sem);
+	return (last);
 }
 
-/*void cleanSharedRessources(int shmid, sharedMemory *shmaddr)
+void cleanSharedRessources(sharedMemory *shmaddr)
 {
-	if (shmctl(shmid, IPC_RMID, NULL) == -1) {
-		perror("shmctl");
-		exit(1);
+	if (sem_close(sem) == -1) {
+		perror("sem_close");
+		exit(EXIT_FAILURE);
 	}
-	sem_close(shmaddr->sem);
-	sem_unlink("/shmaddr_sem");
-	shmctl(shmid, IPC_RMID, NULL);
-}*/
-void cleanSharedRessources(int shmid, sharedMemory *shmaddr)
-{
-    if (sem_close(shmaddr->sem) == -1) {
-        perror("sem_close");
-        exit(EXIT_FAILURE);
-    }
-    if (sem_unlink(SEM_NAME) == -1) {
-        perror("sem_unlink");
-        exit(EXIT_FAILURE);
-    }
-    if (munmap(shmaddr, sizeof(sharedMemory)) == -1) {
-        perror("munmap");
-        exit(EXIT_FAILURE);
-    }
-    if (shm_unlink(SHM_NAME) == -1) {
-        perror("shm_unlink");
-        exit(EXIT_FAILURE);
-    }
+	
+	if (munmap(shmaddr, sizeof(sharedMemory)) == -1) {
+		perror("munmap");
+		exit(EXIT_FAILURE);
+	}
+	// printf("shm_unlink %s\n",SHM_NAME);
+	// system("ls /dev/shm/*");
+	// shm_unlink(SHM_NAME);
+	// sem_unlink(SEM_NAME);
+	if (shm_unlink(SHM_NAME) == -1) {
+		perror("shm_unlink");
+		// exit(EXIT_FAILURE);
+	}
+	if (sem_unlink(SEM_NAME) == -1) {
+		perror("sem_unlink");
+		// exit(EXIT_FAILURE);
+	}
+	// return;
 }
 
-void detachSharedRessources(sharedMemory *shmaddr)
+void waitForPlayers(sharedMemory *shmaddr)
 {
-	// if (shmdt(shmaddr) == -1) {
-	// 	perror("shmdt");
-	// 	exit(1);
-	// }
+	bool launch = false;
+
+	while (launch != true) {
+		if (sem_wait(sem) == -1) {
+			perror("sem_wait");
+			exit(EXIT_FAILURE);
+		}
+		
+		if (shmaddr->counter >= 2)
+		{
+			launch = true;
+			shmaddr->launch = true;
+		}
+		if (sem_post(sem) == -1) {
+			perror("sem_post");
+			exit(EXIT_FAILURE);
+		}
+		usleep(5000);
+	}
 }
 
-void check(sharedMemory *shmaddr, unsigned short int myOrder)
+void printTeamPosition(sharedMemory *shmaddr)
 {
-	// sem_wait(shmaddr->sem);
-	printf("counter: %d Order: %d\n", shmaddr->counter, myOrder);
-	// sem_post(shmaddr->sem);
-}
-
-/*int main(int argc, char *argv[])
-{
-	// bool isFirst = false;
-	// int shmid;
-	// sharedMemory *shmaddr;
-	// unsigned short int myOrder = 0;
-
-	if (checkArgs(argc, argv) == false \
-		|| getSharedRessources(&isFirst, &shmid, &shmaddr, &myOrder) == false)
+	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		return EXIT_FAILURE;
+		if (shmaddr->teams[i].isActive == true)
+		{
+			printf("Team %d\n", i);
+			for (int j = 0; j < MAX_PROCESSES; j++)
+			{
+				if (shmaddr->teams[i].players[j].isActive == true)
+				{
+					printf("	Player %d: x=%d y=%d\n", j, shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y);
+				}
+			}
+		}
 	}
-	// initSharedRessources(shmaddr, ft_atoi(argv[1]), &myOrder, isFirst);
-	check(shmaddr, myOrder);
-	// waitForPlayers(shmaddr);
-	// if (isFirst == true)
-	// {
-	// 	initGame(shmaddr);
-	// 	// launchGraphics();
-	// }
-	// launchGame(shmaddr, myOrder);
-	if (isLast(shmaddr) == true)
-	{
-		cleanSharedRessources(shmid, shmaddr);
-		printf("Clean shared ressources\n");
-	}
-	detachSharedRessources(shmaddr); // ? should detach at the end
-	printf("Detached shared ressources\n");
-	return 0;
-}*/
-
-void remove_all_ipc() {
-    struct shmid_ds shm_info;
-    struct semid_ds sem_info;
-    struct msqid_ds msg_info;
-    int shm_id, sem_id, msg_id;
-    key_t key;
-
-    // Remove all shared memory segments
-    for (shm_id = shmctl(0, SHM_STAT, &shm_info); shm_id >= 0; shm_id = shmctl(shm_id + 1, SHM_STAT, &shm_info)) {
-        if (shmctl(shm_id, IPC_RMID, NULL) == -1) {
-            perror("shmctl");
-        }
-		printf("shmctl");
-    }
-
-    // Remove all semaphores
-    for (sem_id = semctl(0, 0, SEM_STAT, &sem_info); sem_id >= 0; sem_id = semctl(sem_id + 1, 0, SEM_STAT, &sem_info)) {
-        if (semctl(sem_id, 0, IPC_RMID) == -1) {
-            perror("semctl");
-        }
-		printf("semctl");
-    }
-
-    // Remove all message queues
-    for (msg_id = msgctl(0, MSG_STAT, &msg_info); msg_id >= 0; msg_id = msgctl(msg_id + 1, MSG_STAT, &msg_info)) {
-        if (msgctl(msg_id, IPC_RMID, NULL) == -1) {
-            perror("msgctl");
-        }
-		printf("msgctl");
-    }
 }
 
 int main(int argc, char *argv[])
 {
-    int shmid;
-    sharedMemory *shmaddr;
-    unsigned short int myOrder = 0;
-    bool isFirst = false;
-    key_t key;
-    key = 1234;
-	bool launch = false;
-	// remove_all_ipc();
-
+	int shmid;
+	sharedMemory *shmaddr;
+	unsigned short int myOrder = 0;
 
 	if (checkArgs(argc, argv) == false \
-		|| getSharedRessources(&isFirst, &shmid, &shmaddr, &myOrder) == false)
+		|| getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
 	{
-        exit(EXIT_FAILURE);
-    }
-	
-    // If this is the first process, initialize the shared memory
-	initSharedRessources(shmaddr, ft_atoi(argv[1]), &myOrder, isFirst);
-	sem_wait(shmaddr->sem);
-	sem_post(shmaddr->sem);
-
-    // Wait until at least 2 instances have attached
-	// printf("Waiting for other processes to attach\n");
-	printf("counter: %d Order: %d\n", shmaddr->counter, myOrder);
-    while (shmaddr->counter < 2) {
-		// sem_wait(shmaddr->sem);
-		// sem_post(shmaddr->sem);
-        usleep(10000);
-    }
-	usleep(10000);
-	
-
-    // Remove the shared memory segment if this is the last process
-   if (isLast(shmaddr) == true)
+		exit(EXIT_FAILURE);
+	}
+	// cleanSharedRessources(shmid, shmaddr);
+	// return 0;
+	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder); //set the default team to 0
+	waitForPlayers(shmaddr);
+	if (myOrder == 1)
 	{
-		cleanSharedRessources(shmid, shmaddr);
-		printf("Clean shared ressources\n");
+		initGame(shmaddr);
+		printTeamPosition(shmaddr);
+		// launchGraphics();
+	}
+	// launchGame(shmaddr, myOrder);
+
+	// Remove the shared memory segment if this is the last process
+	if (isLast(shmaddr) == true)
+	{
+		cleanSharedRessources(shmaddr);
+		printf("Clean shared ressources %d\n",myOrder);
 	}
 	printf("End of process %d\n", myOrder);
-    return 0;
+	return 0;
 }

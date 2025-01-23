@@ -11,136 +11,186 @@
 key_t keygen()
 {
 	key_t key;
-    if ((key = ftok(SHM_KEY_PATH, SHM_KEY_ID)) == -1) {
-        perror("ftok");
-        return -1;
-    }
-    return key;
+	if ((key = ftok(SHM_KEY_PATH, SHM_KEY_ID)) == -1) {
+		perror("ftok");
+		return -1;
+	}
+	return key;
 }
 
-/*bool getSharedRessources(bool *isFirst, int *shmid, sharedMemory **shmaddr, unsigned short int *myOrder)
+bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int *myOrder)
 {
-	key_t key = keygen();
-	if (key == -1)
+	// Try to create the shared memory object
+	*shm_fd = shm_open(SHM_NAME, O_CREAT | O_EXCL | O_RDWR, 0666);
+	if (*shm_fd == -1) {
+		// If the shared memory object already exists, open it
+		*shm_fd = shm_open(SHM_NAME, O_RDWR, 0666);
+		if (*shm_fd == -1) {
+			perror("shm_open");
+			return false;
+		}
+		*myOrder = 2;
+
+		printf("Attached to existing shared memory segment %d\n",*myOrder);
+	} else {
+		*myOrder = 1;
+		printf("Created new shared memory segment %d\n",*myOrder);
+
+		// Set the size of the shared memory object
+		if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
+			perror("ftruncate");
+			return false;
+		}
+	}
+
+	// Map the shared memory object
+	*shmaddr = mmap(NULL, sizeof(sharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, *shm_fd, 0);
+	if (*shmaddr == MAP_FAILED) {
+		perror("mmap");
 		return false;
-	*shmid = shmget(key, sizeof(sharedMemory), IPC_CREAT | IPC_EXCL | 0666);
-    if (*shmid == -1) {
-        // If the segment already exists, get the existing one
-        *shmid = shmget(key, sizeof(sharedMemory), 0666);
-        if (*shmid == -1) {
-            perror("shmget");
-            return false;
-        }
-        printf("Attached to existing shared memory segment\n");
-    } else {
-        printf("Created new shared memory segment\n");
-        *isFirst = true;
-    }
-	*shmaddr = (sharedMemory*) shmat(*shmid, NULL, 0);
-    if (*shmaddr == (void *) -1) {
-        perror("shmat");
-        return false;
-    }
-	if (*isFirst == true)
-	{
-		(*shmaddr)->sem = sem_open("/shmaddr_sem", O_CREAT, 0644, 1);
-		if ((*shmaddr)->sem == SEM_FAILED) {
+	}
+	if (*myOrder == 1) {
+		sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
+		if (sem == SEM_FAILED) {
 			perror("sem_open");
 			return false;
 		}
-		// sem_wait((*shmaddr)->sem);
-		// (*shmaddr)->counter = 0;
-		// sem_post((*shmaddr)->sem);
-		
+	} else {
+		// Open the existing semaphore
+		sem = sem_open(SEM_NAME, 0);
+		if (sem == SEM_FAILED) {
+			perror("sem_open");
+			return false;
+		}
 	}
 	return true;
-}*/
-
-bool getSharedRessources(bool *isFirst, int *shm_fd, sharedMemory **shmaddr, unsigned short int *myOrder)
+}
+/*
+Return in function of the index:
+0 0
+1 1
+2 -1
+3 2
+4 -2
+5 3
+*/
+short int minus(short int index)
 {
-    const char *shm_name = SHM_NAME;
-    const char *sem_name = SEM_NAME;
-    *isFirst = false;
-
-    // Try to create the shared memory object
-    *shm_fd = shm_open(shm_name, O_CREAT | O_EXCL | O_RDWR, 0666);
-    if (*shm_fd == -1) {
-        // If the shared memory object already exists, open it
-        *shm_fd = shm_open(shm_name, O_RDWR, 0666);
-        if (*shm_fd == -1) {
-            perror("shm_open");
-            return false;
-        }
-        printf("Attached to existing shared memory segment\n");
-    } else {
-        printf("Created new shared memory segment\n");
-        *isFirst = true;
-
-        // Set the size of the shared memory object
-        if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
-            perror("ftruncate");
-            return false;
-        }
-    }
-
-    // Map the shared memory object
-    *shmaddr = mmap(NULL, sizeof(sharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, *shm_fd, 0);
-    if (*shmaddr == MAP_FAILED) {
-        perror("mmap");
-        return false;
-    }
-
-    if (*isFirst) {
-        // Initialize the semaphore in shared memory
-        (*shmaddr)->sem = sem_open(sem_name, O_CREAT, 0644, 1);
-        if ((*shmaddr)->sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
-        // Initialize the counter
-        (*shmaddr)->counter = 0;
-    } else {
-        // Open the existing semaphore
-        (*shmaddr)->sem = sem_open(sem_name, 0);
-        if ((*shmaddr)->sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
-    }
-
-    return true;
+	if (index % 2 == 0)
+		return index / 2;
+	else
+		return -((index + 1) / 2);
 }
 
-void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, bool isFirst)
+void doPosition(player *player, unsigned short int index, unsigned short int team)
 {
-	// sem_wait(shmaddr->sem);
-	if (sem_wait(shmaddr->sem) == -1) {
-        perror("sem_wait");
-        exit(EXIT_FAILURE);
-    }
+	unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
+							{MAP_SIZE / 2, MAP_SIZE - 4},
+							{4, MAP_SIZE / 2},
+							{MAP_SIZE - 4, MAP_SIZE / 2}};
+	unsigned short int rest = index / 5;
+	index = index % 5;
+	// printf("team = %d,index = %d, rest = %d\n",team, index, rest);
+	switch (team)
+	{
+	case 0:
+		player->x = tab[team][0] + minus(index);
+		player->y = tab[team][1] - rest;
+		break;
+	case 1:
+		player->x = tab[team][0] + minus(index);
+		player->y = tab[team][1] - rest;
+		break;
+	case 2:
+		player->x = tab[team][0] - rest;
+		player->y = tab[team][1] + minus(index);
+		break;
+	case 3:
+		player->x = tab[team][0] - rest;
+		player->y = tab[team][1] + minus(index);
+		break;
+	default:
+		break;
+	}
+}
+
+void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder)
+{
+	unsigned short int index;
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		exit(EXIT_FAILURE);
+	}
 
 
-	if (isFirst == true)
+	if (*myOrder == 1)
 	{
 		shmaddr->launch = false;
 		shmaddr->counter = 0;
+		for (unsigned short int i = 0; i < MAX_TEAM; i++)
+		{
+			shmaddr->teams[i].isActive = false;
+			shmaddr->teams[i].nPlayers = 0;
+		}
 	}
 	if (shmaddr->counter >= MAX_PROCESSES)
 	{
 		printf("Max number of processes reached\n");
+		if (sem_post(sem) == -1) {
+			perror("sem_post");
+		}
 		exit(EXIT_FAILURE);
 	}
 	*myOrder = ++shmaddr->counter;
-	shmaddr->players[*myOrder].isActive = true;
-	shmaddr->players[*myOrder].team = team;
-	shmaddr->players[*myOrder].x = 0;
-	shmaddr->players[*myOrder].y = 0;
-	// Release semaphore
-    if (sem_post(shmaddr->sem) == -1) {
-        perror("sem_post");
-        exit(EXIT_FAILURE);
-    }
+	index = shmaddr->teams[team].nPlayers++;
+	shmaddr->teams[team].isActive = true;
+	shmaddr->teams[team].players[index].isActive = true;
+	if (index <= 20)
+		doPosition(&shmaddr->teams[team].players[index], index, team);
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		exit(EXIT_FAILURE);
+	}
 }
 
+bool checkTeam(sharedMemory *shmaddr)
+{
+	unsigned short int teamNb = 0;
+	bool atleast2 = false;
 
+	for (int i = 1; i <= MAX_TEAM; i++)
+	{
+		if (shmaddr->teams[i].isActive == true)
+			teamNb++;
+		if (teamNb >= MAX_PROCESSES)
+			return false;
+		if (shmaddr->teams[i].nPlayers >= 2)
+			atleast2 = true;
+	}
+	if (teamNb < 2 || atleast2 == false)
+		return false;
+	return true;
+}
+
+bool initGame(sharedMemory *shmaddr)
+{
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		exit(EXIT_FAILURE);
+	}
+	if (checkTeam(shmaddr) == false)
+	{
+		if (sem_post(sem) == -1) {
+			perror("sem_post");
+			exit(EXIT_FAILURE);
+		}
+		return false;
+	}
+	shmaddr->wichToPlay = 1;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		exit(EXIT_FAILURE);
+	}
+	return true;
+}
 
