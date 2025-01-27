@@ -105,7 +105,7 @@ typedef struct screen
 
 /* Ressources */
 bool getSharedRessources(int *shmid, sharedMemory **shmaddr, unsigned short int *myOrder);
-void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, player *player);
+void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index);
 bool initGame(sharedMemory *shmaddr);
 void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team);
 
@@ -114,6 +114,7 @@ void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index,
 void launchGraphics(sharedMemory *shmaddr);
 void printMap(sharedMemory *shmaddr);
 bool	someoneThere(sharedMemory *shmaddr, int x, int y);
+player *getPlayer(sharedMemory *shmaddr, int x, int y);
 
 
 
@@ -124,7 +125,7 @@ void resize(int32_t width, int32_t height, void *param);
 void hook(void *param);
 
 /* game */
-void launchGame(sharedMemory *shmaddr, player *player);
+void launchGame(sharedMemory *shmaddr, int team, int *index);
 void checkAlive(sharedMemory *shmaddr);
 void checkTeamAlive(sharedMemory *shmaddr);
 

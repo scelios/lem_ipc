@@ -131,9 +131,8 @@ void initMap(sharedMemory *shmaddr)
 	}
 }
 
-void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, player *player)
+void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index)
 {
-	unsigned short int index;
 	if (sem_wait(sem) == -1) {
 		perror("sem_wait");
 		shmaddr->criticalError = true;
@@ -165,16 +164,15 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 		exit(EXIT_FAILURE);
 	}
 	*myOrder = ++shmaddr->counter;
-	index = shmaddr->teams[team].nPlayers++;
+	*index = shmaddr->teams[team].nPlayers++;
 	shmaddr->teams[team].isActive = true;
-	shmaddr->teams[team].players[index].isActive = true;
-	shmaddr->teams[team].players[index].team = team;
-	if (index <= 20){
+	shmaddr->teams[team].players[*index].isActive = true;
+	shmaddr->teams[team].players[*index].team = team;
+	if (*index <= 20){
 		printf("Myorder = %d\n", *myOrder);
-		doPosition(shmaddr, &shmaddr->teams[team].players[index], index, team);
+		doPosition(shmaddr, &shmaddr->teams[team].players[*index], *index, team);
 	}
 
-	*player = shmaddr->teams[team].players[index];
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
 		shmaddr->criticalError = true;

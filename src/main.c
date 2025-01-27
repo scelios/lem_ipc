@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	int shmid;
 	sharedMemory *shmaddr;
 	unsigned short int myOrder = 0;
-	player player;
+	int index;
 
 	if (checkArgs(argc, argv) == false \
 		|| getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
@@ -134,8 +134,8 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &player); //set the default team to 0
-	waitForPlayers(shmaddr);
+	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
+	// waitForPlayers(shmaddr);
 	if (myOrder == 1)
 	{
 		initGame(shmaddr);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 		// launchGraphics();
 	}
 	usleep(50000);
-	launchGame(shmaddr, &player);
+	launchGame(shmaddr, ft_atoi(argv[1]) - 1, &index);
 	// Remove the shared memory segment if this is the last process
 	if (isLast(shmaddr) == true)
 	{

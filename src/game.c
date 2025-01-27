@@ -29,7 +29,6 @@ void checkThisPlayerAlive(sharedMemory *shmaddr, player *player)
 			if (counter[i] >= 2 )
 			{
 				player->isActive = false;
-				printf("player dead %d %d",player->x, player->y);
 				// shmaddr->map[player->x][player->y].player = NULL;
 				shmaddr->teams[player->team].nPlayers--;
 				if (shmaddr->teams[player->team].nPlayers == 0)
@@ -38,7 +37,6 @@ void checkThisPlayerAlive(sharedMemory *shmaddr, player *player)
 				}
 				// printf("player team = %d i = %d\n",player->team, i);
 				// printf("Ma pos %d %d Killer pos %d %d\n",player->x, player->y,shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y);
-				write(1,"Dead\n",5);
 			}
 		}
 	}
@@ -98,11 +96,12 @@ void checkTeamAlive(sharedMemory *shmaddr)
 	}
 }
 
-void launchGame(sharedMemory *shmaddr, player *player)
+void launchGame(sharedMemory *shmaddr, int team, char *index)
 {
-	bool shouldContinue = true;
+	bool shouldStop = false;
+	
 
-	while (shouldContinue == true)
+	while (shouldStop == false)
 	{
 		usleep(1000000);
 		if (sem_wait(sem) == -1) {
@@ -110,17 +109,19 @@ void launchGame(sharedMemory *shmaddr, player *player)
 			shmaddr->criticalError = true;
 			exit(EXIT_FAILURE);
 		}
+		player *player = &shmaddr->teams[team].players[*index];
+
 		// printf("Team nPlayers = %d team =%d\n", shmaddr->teams[player->team].nPlayers, player->team);
 		// printf("Team = %d, Nplayers = %d\n", player->team, shmaddr->teams[player->team].nPlayers);
 		// checkAlive(shmaddr, player);
-		shouldContinue = (shmaddr->end == false && player->isActive == true);
-		if (shouldContinue == false)
+		shouldStop = (shmaddr->end == true || player->isActive == false);
+		printf("Should stop %d %d %d\n",shouldStop,shmaddr->end ,player->isActive);
+		if (shouldStop == true)
 		{
-			shmaddr->teams[player->team].nPlayers--;
-			if (shmaddr->teams[player->team].nPlayers == 0)
-				shmaddr->teams[player->team].isActive = false;
+
+			printf("I'm dead\n");
 		}
-		// printf("Continue = %d end = %d player = %d\n", shouldContinue, shmaddr->end, player->isActive);
+		// printf("Continue = %d end = %d player = %d\n", shouldStop, shmaddr->end, player->isActive);
 		if (sem_post(sem) == -1) {
 			perror("sem_post");
 			shmaddr->criticalError = true;
