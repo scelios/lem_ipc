@@ -56,6 +56,7 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
 			return false;
 		}
 	} else {
+		usleep(1000); //wait for the first process to create the semaphore
 		// Open the existing semaphore
 		sem = sem_open(SEM_NAME, 0);
 		if (sem == SEM_FAILED) {
@@ -82,9 +83,9 @@ short int minus(short int index)
 		return -((index + 1) / 2);
 }
 
-void doPosition(player *player, unsigned short int index, unsigned short int team)
+void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
 {
-	unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
+	const unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
 							{MAP_SIZE / 2, MAP_SIZE - 4},
 							{4, MAP_SIZE / 2},
 							{MAP_SIZE - 4, MAP_SIZE / 2}};
@@ -99,18 +100,34 @@ void doPosition(player *player, unsigned short int index, unsigned short int tea
 		break;
 	case 1:
 		player->x = tab[team][0] + minus(index);
-		player->y = tab[team][1] - rest;
+		player->y = tab[team][1] + rest;
 		break;
 	case 2:
 		player->x = tab[team][0] - rest;
 		player->y = tab[team][1] + minus(index);
 		break;
 	case 3:
-		player->x = tab[team][0] - rest;
+		player->x = tab[team][0] + rest;
 		player->y = tab[team][1] + minus(index);
 		break;
 	default:
 		break;
+	}
+	shmaddr->map[player->x][player->y].team = team;
+	shmaddr->map[player->x][player->y].player = player;
+	// printf("Map position x = %d, y = %d\n", shmaddr->map[player->x][player->y].player->x, shmaddr->map[player->x][player->y].player->y);
+
+}
+
+void initMap(sharedMemory *shmaddr)
+{
+	for (unsigned short int i = 0; i < MAP_SIZE; i++)
+	{
+		for (unsigned short int j = 0; j < MAP_SIZE; j++)
+		{
+			shmaddr->map[i][j].team = 0;
+			shmaddr->map[i][j].player = NULL;
+		}
 	}
 }
 
@@ -119,6 +136,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	unsigned short int index;
 	if (sem_wait(sem) == -1) {
 		perror("sem_wait");
+		shmaddr->criticalError = true;
 		exit(EXIT_FAILURE);
 	}
 
@@ -127,6 +145,11 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	{
 		shmaddr->launch = false;
 		shmaddr->counter = 0;
+		shmaddr->wichToPlay = 0;
+		shmaddr->changed = true;
+		shmaddr->criticalError = false;
+		shmaddr->end = false;
+		initMap(shmaddr);
 		for (unsigned short int i = 0; i < MAX_TEAM; i++)
 		{
 			shmaddr->teams[i].isActive = false;
@@ -145,10 +168,13 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	index = shmaddr->teams[team].nPlayers++;
 	shmaddr->teams[team].isActive = true;
 	shmaddr->teams[team].players[index].isActive = true;
-	if (index <= 20)
-		doPosition(&shmaddr->teams[team].players[index], index, team);
+	if (index <= 20){
+		printf("Myorder = %d\n", *myOrder);
+		doPosition(shmaddr, &shmaddr->teams[team].players[index], index, team);
+	}
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
+		shmaddr->criticalError = true;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -176,12 +202,14 @@ bool initGame(sharedMemory *shmaddr)
 {
 	if (sem_wait(sem) == -1) {
 		perror("sem_wait");
+		shmaddr->criticalError = true;
 		exit(EXIT_FAILURE);
 	}
 	if (checkTeam(shmaddr) == false)
 	{
 		if (sem_post(sem) == -1) {
 			perror("sem_post");
+			shmaddr->criticalError = true;
 			exit(EXIT_FAILURE);
 		}
 		return false;
@@ -189,6 +217,7 @@ bool initGame(sharedMemory *shmaddr)
 	shmaddr->wichToPlay = 1;
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
+		shmaddr->criticalError = true;
 		exit(EXIT_FAILURE);
 	}
 	return true;

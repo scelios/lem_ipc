@@ -1,6 +1,6 @@
-NAME	:= miniRT
-CFLAGS	:= -Wextra -Wall -Werror -Ofast -g -DDEBUG=1
-# CFLAGS	:= -Ofast -g -DDEBUG=1
+NAME	:= lemipc
+# CFLAGS	:= -Wextra -Wall -Werror -Ofast -g -DDEBUG=1
+CFLAGS	:= -Ofast -g -DDEBUG=1
 
 LIBMLX	:= ./lib/MLX42
 INCDIR = includes
@@ -10,6 +10,7 @@ LIBS	:= $(LIBMLX)/build/libmlx42.a ./lib/libft/libftprintf.a -ldl -lglfw -pthrea
 
 SRCS	= 	./src/main.c \
 					./src/ressources.c \
+					./src/graphics.c \
 
 OBJS	= ${SRCS:.c=.o}
 LIBFT	= ./lib/libft
@@ -18,7 +19,7 @@ all: libmlx $(NAME)
 
 
 libmlx:
-	@cmake $(LIBMLX) -B $(LIBMLX)/build && make -C $(LIBMLX)/build -j4
+#	 @cmake $(LIBMLX) -B $(LIBMLX)/build && make -C $(LIBMLX)/build -j4
 
 %.o: %.c
 	@$(CC) $(CFLAGS) -o $@ -c $< -I$(INCDIR) && printf "Compiling: $(notdir $<)"
@@ -32,12 +33,12 @@ bonus: libmlx $(OBJS)
 	@$(CC) $(OBJS) $(LIBS) $(HEADERS) -o miniRT_bonus
 
 clean:
-	@make -C $(LIBFT) clean
+#	@make -C $(LIBFT) clean
 	@rm -f $(OBJS)
 
 
 fclean: clean
-	@make -C $(LIBFT) fclean
+#	@make -C $(LIBFT) fclean
 	@rm -f $(NAME)
 	@rm -f $(NAME)_bonus
 

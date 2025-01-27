@@ -1,0 +1,7 @@
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/mlx42.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/edit_cache.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/rebuild_cache.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/list_install_components.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/install.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/install/local.dir
+/root/lem_ipc/lib/MLX42/build/CMakeFiles/install/strip.dir

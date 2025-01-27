@@ -63,16 +63,16 @@ void cleanSharedRessources(sharedMemory *shmaddr)
 	}
 	// printf("shm_unlink %s\n",SHM_NAME);
 	// system("ls /dev/shm/*");
-	// shm_unlink(SHM_NAME);
-	// sem_unlink(SEM_NAME);
-	if (shm_unlink(SHM_NAME) == -1) {
-		perror("shm_unlink");
-		// exit(EXIT_FAILURE);
-	}
-	if (sem_unlink(SEM_NAME) == -1) {
-		perror("sem_unlink");
-		// exit(EXIT_FAILURE);
-	}
+	shm_unlink(SHM_NAME);
+	sem_unlink(SEM_NAME);
+	// if (shm_unlink(SHM_NAME) == -1) {
+	// 	perror("shm_unlink");
+	// 	// exit(EXIT_FAILURE);
+	// }
+	// if (sem_unlink(SEM_NAME) == -1) {
+	// 	perror("sem_unlink");
+	// 	// exit(EXIT_FAILURE);
+	// }
 	// return;
 }
 
@@ -83,6 +83,7 @@ void waitForPlayers(sharedMemory *shmaddr)
 	while (launch != true) {
 		if (sem_wait(sem) == -1) {
 			perror("sem_wait");
+			shmaddr->criticalError = true;
 			exit(EXIT_FAILURE);
 		}
 		
@@ -93,6 +94,7 @@ void waitForPlayers(sharedMemory *shmaddr)
 		}
 		if (sem_post(sem) == -1) {
 			perror("sem_post");
+			shmaddr->criticalError = true;
 			exit(EXIT_FAILURE);
 		}
 		usleep(5000);
@@ -131,15 +133,32 @@ int main(int argc, char *argv[])
 	// cleanSharedRessources(shmid, shmaddr);
 	// return 0;
 	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder); //set the default team to 0
-	waitForPlayers(shmaddr);
+	// waitForPlayers(shmaddr);
 	if (myOrder == 1)
 	{
 		initGame(shmaddr);
 		printTeamPosition(shmaddr);
+		// do a fork here
+		// launchGraphics(shmaddr);
+		
+		pid_t pid = fork();
+		if (pid == -1)
+		{
+			perror("fork");
+			shmaddr->criticalError = true;
+			exit(EXIT_FAILURE);
+		}
+		if (pid != 0)
+		{
+			launchGraphics(shmaddr);
+			printf("End of graphics\n");
+			exit(EXIT_SUCCESS);
+		}
 		// launchGraphics();
 	}
+	usleep(50000);
 	// launchGame(shmaddr, myOrder);
-
+	sleep(5);
 	// Remove the shared memory segment if this is the last process
 	if (isLast(shmaddr) == true)
 	{

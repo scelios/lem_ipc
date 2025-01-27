@@ -2,34 +2,39 @@
 #define LEMIPC_H
 
 #include "../lib/libft/includes/ft_printf.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/msg.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <semaphore.h>
-#include <sys/sem.h>
-#include <errno.h>
+# include "../lib/MLX42/include/MLX42/MLX42.h"
+# include <stdbool.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <sys/ipc.h>
+# include <sys/shm.h>
+# include <sys/types.h>
+# include <unistd.h>
+# include <sys/msg.h>
+# include <sys/mman.h>
+# include <fcntl.h>
+# include <semaphore.h>
+# include <sys/sem.h>
+# include <errno.h>
+# include <math.h>
 
-#define SHM_KEY 65
-#define SHM_SIZE 1024
-#define MAX_PROCESSES 20
-#define MAX_TEAM 4
-#define MAP_SIZE 16
+# define SHM_KEY 65
+# define SHM_SIZE 1024
+# define MAX_PROCESSES 20
+# define MAX_TEAM 4
+# define MAP_SIZE 16
 
-#define MSGSZ 128
+# define MSGSZ 128
 
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
+# define EXIT_SUCCESS 0
+# define EXIT_FAILURE 1
 
-#define SHM_NAME "/shm_example"
-#define SEM_NAME "/shmaddr_sem_my"
+# define SHM_NAME "/shm_example"
+# define SEM_NAME "/shmaddr_sem_my"
+
+# define WIDTH 496
+# define HEIGHT 496
 
 extern sem_t *sem;
 typedef struct msgbuf {
@@ -45,6 +50,7 @@ typedef struct msgbuf {
 */
 typedef struct player{
 	bool isActive;
+	bool isSelected;
 	unsigned short int x;
 	unsigned short int y;
 } player;
@@ -55,7 +61,12 @@ typedef struct team{
 	unsigned short int nPlayers;
 } team;
 
-/*
+typedef struct map{
+	unsigned short int team;
+	player *player;
+} map;
+
+/** 
 * @sem: semaphore
 * @counter: number of processes currently active
 * @wichToPlay: wich team is playing
@@ -69,14 +80,43 @@ typedef struct sharedMemory{
 	unsigned short int counter;
 	unsigned short int wichToPlay;
 	unsigned short int nTeams;
+	map map[MAP_SIZE][MAP_SIZE];
 	team teams[MAX_TEAM];
+	bool criticalError;
+	bool end;
+	bool changed;
 	char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
+
+typedef struct screen
+{
+	mlx_t			*mlx;
+	mlx_image_t		*img;
+	int32_t			width;
+	int32_t			height;
+	double				x;
+	double				y;
+	bool			moved;
+	bool			resized;
+	bool			isClicked;
+	sharedMemory	*shmaddr;
+}	screen;
 
 /* Ressources */
 bool getSharedRessources(int *shmid, sharedMemory **shmaddr, unsigned short int *myOrder);
 void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder);
 bool initGame(sharedMemory *shmaddr);
+void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team);
 
+
+/* Graphics */
+void launchGraphics(sharedMemory *shmaddr);
+
+
+/* hooks */
+void closeScreen(void *param);
+void cursor(double xpos, double ypos, void *param);
+void resize(int32_t width, int32_t height, void *param);
+void hook(void *param);
 
 #endif
