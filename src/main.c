@@ -45,7 +45,7 @@ bool isLast(sharedMemory *shmaddr)
 	bool last = false;
 	sem_wait(sem);
 	shmaddr->counter--;
-	last = shmaddr->counter <= 1 ? true : false;
+	last = shmaddr->counter == 0;
 	sem_post(sem);
 	return (last);
 }
@@ -119,25 +119,28 @@ void printTeamPosition(sharedMemory *shmaddr)
 	}
 }
 
+
+
 int main(int argc, char *argv[])
 {
 	int shmid;
 	sharedMemory *shmaddr;
 	unsigned short int myOrder = 0;
+	player player;
 
 	if (checkArgs(argc, argv) == false \
 		|| getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
 	{
 		exit(EXIT_FAILURE);
 	}
-	// cleanSharedRessources(shmid, shmaddr);
-	// return 0;
-	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder); //set the default team to 0
-	// waitForPlayers(shmaddr);
+
+	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &player); //set the default team to 0
+	waitForPlayers(shmaddr);
 	if (myOrder == 1)
 	{
 		initGame(shmaddr);
-		printTeamPosition(shmaddr);
+		// printTeamPosition(shmaddr);
+		printMap(shmaddr);
 		// do a fork here
 		// launchGraphics(shmaddr);
 		
@@ -157,8 +160,7 @@ int main(int argc, char *argv[])
 		// launchGraphics();
 	}
 	usleep(50000);
-	// launchGame(shmaddr, myOrder);
-	sleep(5);
+	launchGame(shmaddr, &player);
 	// Remove the shared memory segment if this is the last process
 	if (isLast(shmaddr) == true)
 	{

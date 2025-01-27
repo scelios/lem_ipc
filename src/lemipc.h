@@ -51,6 +51,7 @@ typedef struct msgbuf {
 typedef struct player{
 	bool isActive;
 	bool isSelected;
+	unsigned short int team;
 	unsigned short int x;
 	unsigned short int y;
 } player;
@@ -80,7 +81,7 @@ typedef struct sharedMemory{
 	unsigned short int counter;
 	unsigned short int wichToPlay;
 	unsigned short int nTeams;
-	map map[MAP_SIZE][MAP_SIZE];
+	// map map[MAP_SIZE][MAP_SIZE];
 	team teams[MAX_TEAM];
 	bool criticalError;
 	bool end;
@@ -104,13 +105,16 @@ typedef struct screen
 
 /* Ressources */
 bool getSharedRessources(int *shmid, sharedMemory **shmaddr, unsigned short int *myOrder);
-void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder);
+void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, player *player);
 bool initGame(sharedMemory *shmaddr);
 void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team);
 
 
 /* Graphics */
 void launchGraphics(sharedMemory *shmaddr);
+void printMap(sharedMemory *shmaddr);
+bool	someoneThere(sharedMemory *shmaddr, int x, int y);
+
 
 
 /* hooks */
@@ -118,5 +122,12 @@ void closeScreen(void *param);
 void cursor(double xpos, double ypos, void *param);
 void resize(int32_t width, int32_t height, void *param);
 void hook(void *param);
+
+/* game */
+void launchGame(sharedMemory *shmaddr, player *player);
+void checkAlive(sharedMemory *shmaddr);
+void checkTeamAlive(sharedMemory *shmaddr);
+
+
 
 #endif

@@ -17,28 +17,36 @@ void	resize(int32_t width, int32_t height, void *param)
 	screen->height = height;
 	screen->moved = true;
 	screen->resized = true;
-
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		screen->shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	screen->shmaddr->changed = true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		screen->shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
 	mlx_image_to_window(screen->mlx, screen->img, 0, 0);
 }
 
 bool	someoneThere(sharedMemory *shmaddr, int x, int y)
 {
-	// for (int i = 0; i < MAX_TEAM; i++)
-	// {
-	// 	if (shmaddr->teams[i].isActive == true)
-	// 	{
-	// 		for (int j = 0; j < shmaddr->teams[i].nPlayers; j++)
-	// 		{
-	// 			if (shmaddr->teams[i].players[j].isActive == true)
-	// 			{
-	// 				if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
-	// 					return true;
-	// 			}
-	// 		}
-	// 	}
-	// }
-	if (shmaddr->map[x][y].player != NULL)
-		return true;
+	for (int i = 0; i < MAX_TEAM; i++)
+	{
+		if (shmaddr->teams[i].isActive == true)
+		{
+			for (int j = 0; j < MAX_PROCESSES; j++)
+			{
+				if (shmaddr->teams[i].players[j].isActive == true)
+				{
+					if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
+						return true;
+				}
+			}
+		}
+	}
 	return false;
 }
 
@@ -61,7 +69,7 @@ player *getPlayer(sharedMemory *shmaddr, int x, int y)
 	{
 		if (shmaddr->teams[i].isActive == true)
 		{
-			for (int j = 0; j < shmaddr->teams[i].nPlayers; j++)
+			for (int j = 0; j < MAX_PROCESSES; j++)
 			{
 				if (shmaddr->teams[i].players[j].isActive == true)
 				{
@@ -79,7 +87,7 @@ void unselectPlayer(sharedMemory *shmaddr)
 	{
 		if (shmaddr->teams[i].isActive == true)
 		{
-			for (int j = 0; j < shmaddr->teams[i].nPlayers; j++)
+			for (int j = 0; j < MAX_PROCESSES; j++)
 			{
 				if (shmaddr->teams[i].players[j].isActive == true)
 				{
@@ -96,7 +104,7 @@ player *getIsSelected(sharedMemory *shmaddr)
 	{
 		if (shmaddr->teams[i].isActive == true)
 		{
-			for (int j = 0; j < shmaddr->teams[i].nPlayers; j++)
+			for (int j = 0; j < MAX_PROCESSES; j++)
 			{
 				if (shmaddr->teams[i].players[j].isActive == true)
 				{
@@ -111,22 +119,13 @@ player *getIsSelected(sharedMemory *shmaddr)
 
 void movePlayer(sharedMemory *shmaddr,player *player, int x, int y)
 {
-	shmaddr->map[player->x][player->y].player = NULL;
+	// shmaddr->map[player->x][player->y].player = NULL;
 	player->x = x;
 	player->y = y;
-	shmaddr->map[x][y].player = player;
+	// shmaddr->map[x][y].player = player;
 }
 
-/**
- * @brief Player can move if he move only one square in x or y but not both
- * 
- * @param shmaddr 
- * @param player 
- * @param x 
- * @param y 
- * @return true 
- * @return false 
- */
+
 bool validMove(sharedMemory *shmaddr, player *player, int x, int y)
 {
 	if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE)
@@ -144,7 +143,17 @@ void	cursor(double xpos, double ypos, void *param)
 {
 	screen		*screen = (struct screen *)param;
 	sharedMemory		*shmaddr = screen->shmaddr;
-
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	shmaddr->changed = true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
 	// the player is selected if the cursor is on the player
 	// the player is in square in screen->width / MAP_SIZE
 	// if (screen->isClicked == false)
@@ -157,7 +166,17 @@ void	cursor(double xpos, double ypos, void *param)
 	// ypos = (ypos / (double) screen->height) * MAP_SIZE;
 	screen->x = xpos;
 	screen->y = ypos;
-	
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	shmaddr->changed = true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
 	// write(1, "cursor\n", 7);
 }
 
@@ -168,7 +187,17 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 	sharedMemory	*shmaddr = screen->shmaddr;
 	double	xpos = screen->x, ypos = screen->y;
 	(void)mods;
-
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	shmaddr->changed = true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
 	xpos = floor((floor(xpos) / ((double) screen->width / MAP_SIZE))) * ((double) screen->width / MAP_SIZE);
 	ypos = floor((floor(ypos) / ((double) screen->height / MAP_SIZE))) * ((double) screen->height / MAP_SIZE);
 	xpos = (xpos / (double) screen->width) * MAP_SIZE;
@@ -180,6 +209,7 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 			shmaddr->criticalError = true;
 			exit(EXIT_FAILURE);
 		}
+		shmaddr->changed = true;
 		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
 		{
 			player *player = getIsSelected(shmaddr);
@@ -195,7 +225,7 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 			}
 			return;
 		}
-		shmaddr->changed = true;
+		
 		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == true)
 		{
 			unselectPlayer(shmaddr);
@@ -217,6 +247,17 @@ void	keyhook(mlx_key_data_t keydata, void *param)
 	screen	*screen = (struct screen *)param;
 	sharedMemory	*shmaddr = screen->shmaddr;
 
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	shmaddr->changed = true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
 	// if (keydata.key == MLX_KEY_D && keydata.action != MLX_RELEASE)
 	// 	screen->camera.pos.x += speed;
 	// if (keydata.key == MLX_KEY_D || keydata.key == MLX_KEY_A
@@ -299,7 +340,7 @@ void putPlayer(screen *screen, sharedMemory *shmaddr)
 	{
 		if (shmaddr->teams[i].isActive == true)
 		{
-			for (int j = 0; j < shmaddr->teams[i].nPlayers; j++)
+			for (int j = 0; j < MAX_PROCESSES; j++)
 			{
 				if (shmaddr->teams[i].players[j].isActive == true)
 				{
@@ -322,7 +363,6 @@ bool somethingChanged(sharedMemory *shmaddr)
 	}
 	if (shmaddr->changed == true)
 	{
-		// shmaddr->changed = false;
 		if (sem_post(sem) == -1) {
 			perror("sem_post");
 			shmaddr->criticalError = true;
@@ -351,6 +391,23 @@ void printBlack(screen *screen)
 	}
 }
 
+bool shouldStop(sharedMemory *shmaddr)
+{
+	bool check = false;
+	if (sem_wait(sem) == -1) {
+		perror("sem_wait");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	check = shmaddr->criticalError == true || shmaddr->end == true;
+	if (sem_post(sem) == -1) {
+		perror("sem_post");
+		shmaddr->criticalError = true;
+		exit(EXIT_FAILURE);
+	}
+	return check;
+}
+
 void	hook(void *mini)
 {
 	screen		*screen;
@@ -362,13 +419,20 @@ void	hook(void *mini)
 	{
 		usleep(1000);
 	}
+	usleep(10000);
+	if (shouldStop(shmaddr))
+	{
+		mlx_close_window(screen->mlx);
+	}
 	// write(1, "hook\n", 5);
 	printBlack(screen);
 	putCadrillage(screen);
 	putPlayer(screen, screen->shmaddr);
+	
+	checkAlive(shmaddr);
+	checkTeamAlive(shmaddr);
 
-
-
+	// shmaddr->changed = false;
 
 
 	// write(1, "putCadrillage\n", 14);
@@ -408,6 +472,7 @@ void closeScreen(void *param)
 		exit(EXIT_FAILURE);
 	}
 	shmaddr->end = true;
+	shmaddr->changed = true;
 	printf("End by function\n");
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
@@ -426,6 +491,7 @@ void launchGraphics(sharedMemory *shmaddr)
 	screen.moved = false;
 	screen.resized = false;
 	screen.isClicked = false;
+
 	screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
 	if (!screen.mlx)
 	{

@@ -11,6 +11,7 @@ LIBS	:= $(LIBMLX)/build/libmlx42.a ./lib/libft/libftprintf.a -ldl -lglfw -pthrea
 SRCS	= 	./src/main.c \
 					./src/ressources.c \
 					./src/graphics.c \
+					./src/game.c \
 
 OBJS	= ${SRCS:.c=.o}
 LIBFT	= ./lib/libft
