@@ -35,15 +35,14 @@ bool	someoneThere(sharedMemory *shmaddr, int x, int y)
 {
 	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		if (shmaddr->teams[i].isActive == true)
+		if (shmaddr->teams[i].isActive == false)
+			continue;
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
-			for (int j = 0; j < MAX_PROCESSES; j++)
+			if (shmaddr->teams[i].players[j].isActive == true)
 			{
-				if (shmaddr->teams[i].players[j].isActive == true)
-				{
-					if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
-						return true;
-				}
+				if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
+					return true;
 			}
 		}
 	}
@@ -67,15 +66,14 @@ player *getPlayer(sharedMemory *shmaddr, int x, int y)
 	// return shmaddr->map[x][y].player;
 	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		if (shmaddr->teams[i].isActive == true)
+		if (shmaddr->teams[i].isActive == false)
+			continue;
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
-			for (int j = 0; j < MAX_PROCESSES; j++)
+			if (shmaddr->teams[i].players[j].isActive == true)
 			{
-				if (shmaddr->teams[i].players[j].isActive == true)
-				{
-					if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
-						return &shmaddr->teams[i].players[j];
-				}
+				if (shmaddr->teams[i].players[j].x == x && shmaddr->teams[i].players[j].y == y)
+					return &shmaddr->teams[i].players[j];
 			}
 		}
 	}
@@ -85,14 +83,13 @@ void unselectPlayer(sharedMemory *shmaddr)
 {
 	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		if (shmaddr->teams[i].isActive == true)
+		if (shmaddr->teams[i].isActive == false)
+			continue;
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
-			for (int j = 0; j < MAX_PROCESSES; j++)
+			if (shmaddr->teams[i].players[j].isActive == true)
 			{
-				if (shmaddr->teams[i].players[j].isActive == true)
-				{
-					shmaddr->teams[i].players[j].isSelected = false;
-				}
+				shmaddr->teams[i].players[j].isSelected = false;
 			}
 		}
 	}
@@ -102,15 +99,14 @@ player *getIsSelected(sharedMemory *shmaddr)
 {
 	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		if (shmaddr->teams[i].isActive == true)
+		if (shmaddr->teams[i].isActive == false)
+			continue;
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
-			for (int j = 0; j < MAX_PROCESSES; j++)
+			if (shmaddr->teams[i].players[j].isActive == true)
 			{
-				if (shmaddr->teams[i].players[j].isActive == true)
-				{
-					if (shmaddr->teams[i].players[j].isSelected == true)
-						return &shmaddr->teams[i].players[j];
-				}
+				if (shmaddr->teams[i].players[j].isSelected == true)
+					return &shmaddr->teams[i].players[j];
 			}
 		}
 	}
@@ -338,17 +334,16 @@ void putPlayer(screen *screen, sharedMemory *shmaddr)
 {
 	for (int i = 0; i < MAX_TEAM; i++)
 	{
-		if (shmaddr->teams[i].isActive == true)
+		if (shmaddr->teams[i].isActive == false)
+			continue;
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
-			for (int j = 0; j < MAX_PROCESSES; j++)
+			if (shmaddr->teams[i].players[j].isActive == true)
 			{
-				if (shmaddr->teams[i].players[j].isActive == true)
-				{
-					if (shmaddr->teams[i].players[j].isSelected == true)
-						drawSquare(screen, shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y, 4);
-					else
-						drawSquare(screen, shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y, i);
-				}
+				if (shmaddr->teams[i].players[j].isSelected == true)
+					drawSquare(screen, shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y, 4);
+				else
+					drawSquare(screen, shmaddr->teams[i].players[j].x, shmaddr->teams[i].players[j].y, i);
 			}
 		}
 	}

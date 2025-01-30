@@ -44,7 +44,7 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
 	}
 
 	// Map the shared memory object
-	*shmaddr = mmap(NULL, sizeof(sharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, *shm_fd, 0);
+	*shmaddr = (sharedMemory *)mmap(NULL, sizeof(sharedMemory), PROT_READ | PROT_WRITE, MAP_SHARED, *shm_fd, 0);
 	if (*shmaddr == MAP_FAILED) {
 		perror("mmap");
 		return false;
@@ -81,6 +81,7 @@ short int minus(short int index)
 		return index / 2;
 	else
 		return -((index + 1) / 2);
+	return 0;
 }
 
 void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
@@ -167,6 +168,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	*index = shmaddr->teams[team].nPlayers++;
 	shmaddr->teams[team].isActive = true;
 	shmaddr->teams[team].players[*index].isActive = true;
+	shmaddr->teams[team].players[*index].willDie = false;
 	shmaddr->teams[team].players[*index].team = team;
 	if (*index <= 20){
 		printf("Myorder = %d\n", *myOrder);

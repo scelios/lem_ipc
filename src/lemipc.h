@@ -37,7 +37,7 @@
 # define HEIGHT 496
 
 extern sem_t *sem;
-typedef struct msgbuf {
+typedef struct msg_buf {
 	long mtype;
 	char mtext[MSGSZ];
 } message_buf;
@@ -51,6 +51,7 @@ typedef struct msgbuf {
 typedef struct player{
 	bool isActive;
 	bool isSelected;
+	bool willDie;
 	unsigned short int team;
 	unsigned short int x;
 	unsigned short int y;
@@ -64,7 +65,7 @@ typedef struct team{
 
 typedef struct map{
 	unsigned short int team;
-	player *player;
+	struct player *player;
 } map;
 
 /** 
@@ -125,7 +126,10 @@ void resize(int32_t width, int32_t height, void *param);
 void hook(void *param);
 
 /* game */
+
 void launchGame(sharedMemory *shmaddr, int team, int *index);
+void killWillDie(sharedMemory *shmaddr);
+
 void checkAlive(sharedMemory *shmaddr);
 void checkTeamAlive(sharedMemory *shmaddr);
 
