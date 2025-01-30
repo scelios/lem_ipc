@@ -395,6 +395,7 @@ bool shouldStop(sharedMemory *shmaddr)
 		exit(EXIT_FAILURE);
 	}
 	check = shmaddr->criticalError == true || shmaddr->end == true;
+	// printf("Check %d %d %d\n",check,shmaddr->criticalError,shmaddr->end);
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
 		shmaddr->criticalError = true;
@@ -417,6 +418,7 @@ void	hook(void *mini)
 	usleep(10000);
 	if (shouldStop(shmaddr))
 	{
+		printf("shoudl stop\n");
 		mlx_close_window(screen->mlx);
 	}
 	// write(1, "hook\n", 5);
