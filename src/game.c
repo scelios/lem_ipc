@@ -15,7 +15,7 @@ bool isAdjacent(player *player1,player *player2)
 
 void printTeam(sharedMemory *shmaddr, int team)
 {
-		for (char j = 0; j < MAX_PROCESSES; j++)
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
 			if (shmaddr->teams[team].players[j].isActive == true)
 			 printf("Player of team %d in %d %d is alive\n",team, shmaddr->teams[team].players[j].x, shmaddr->teams[team].players[j].y);
@@ -29,7 +29,7 @@ void checkThisPlayerAlive(sharedMemory *shmaddr, player *player)
 		if (shmaddr->teams[i].isActive == false || i == player->team)
 			continue;
 		char counter[4] = {0,0,0,0};
-		for (char j = 0; j < MAX_PROCESSES; j++)
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
 			if (shmaddr->teams[i].players[j].isActive == false)
 				continue;
@@ -55,7 +55,7 @@ void checkAlive(sharedMemory *shmaddr)
 	{
 		if (shmaddr->teams[i].isActive == false)
 			continue;
-		for (char j = 0; j < MAX_PROCESSES; j++)
+		for (int j = 0; j < MAX_PROCESSES; j++)
 		{
 			if (shmaddr->teams[i].players[j].isActive == false)
 				continue;
@@ -80,10 +80,11 @@ void killWillDie(sharedMemory *shmaddr)
 		{
 			if (shmaddr->teams[i].players[j].isActive == false)
 				continue;
-			if (shmaddr->teams[i].players[j].willDie == true)
+			if (shmaddr->teams[i].players[j].isActive == true && shmaddr->teams[i].players[j].willDie == true)
 			{
 				shmaddr->teams[i].nPlayers--;
 				shmaddr->teams[i].players[j].isActive = false;
+				shmaddr->teams[i].players[j].willDie = false;
 			}
 			// shmaddr->map[shmaddr->teams[i].players[j]->x][shmaddr->teams[i].players[j]->y].shmaddr->teams[i].players[j] = NULL;
 			if (shmaddr->teams[i].nPlayers == 0)
@@ -115,6 +116,7 @@ void checkTeamAlive(sharedMemory *shmaddr)
 	if (oneAlive <= 1)
 	{
 		shmaddr->end = true;
+		printf("Last one alive\n");
 	}
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
@@ -142,10 +144,11 @@ void launchGame(sharedMemory *shmaddr, int team, int *index)
 		// printf("Team = %d, Nplayers = %d\n", player->team, shmaddr->teams[player->team].nPlayers);
 		// checkAlive(shmaddr, player);
 		shouldStop = (shmaddr->end == true || player->isActive == false);
-		// printf("Should stop %d %d %d\n",shouldStop,shmaddr->end ,player->isActive);
 		if (shouldStop == true)
 		{
-
+			// printf("Should stop %d %d %d\n",shouldStop,shmaddr->end ,player->isActive);
+			if (shmaddr->teams[player->team].nPlayers == 0)
+				shmaddr->teams[player->team].isActive = false;
 			printf("I'm dead\n");
 		}
 		// printf("Continue = %d end = %d player = %d\n", shouldStop, shmaddr->end, player->isActive);

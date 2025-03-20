@@ -21,9 +21,11 @@
 
 # define SHM_KEY 65
 # define SHM_SIZE 1024
-# define MAX_PROCESSES 20
 # define MAX_TEAM 4
 # define MAP_SIZE 16
+# define MAX_PROCESSES ((MAP_SIZE * MAP_SIZE) - (2 * MAP_SIZE))
+// Max = 16 * 16 - 2 * 16 = 224
+// Come from Area = size of square * size of square - 2 * size of square (for the diagonals)
 
 # define MSGSZ 128
 
@@ -87,7 +89,7 @@ typedef struct sharedMemory{
 	bool criticalError;
 	bool end;
 	bool changed;
-	char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
+	// char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
 
 typedef struct screen
@@ -96,8 +98,8 @@ typedef struct screen
 	mlx_image_t		*img;
 	int32_t			width;
 	int32_t			height;
-	double				x;
-	double				y;
+	double			x;
+	double			y;
 	bool			moved;
 	bool			resized;
 	bool			isClicked;

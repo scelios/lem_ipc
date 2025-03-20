@@ -127,23 +127,22 @@ int main(int argc, char *argv[])
 	sharedMemory *shmaddr;
 	unsigned short int myOrder = 0;
 	int index;
-
 	if (checkArgs(argc, argv) == false \
-		|| getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
+	|| getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
 	{
 		exit(EXIT_FAILURE);
 	}
 
+	// cleanSharedRessources(shmaddr);
+	// return 0;
 	initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
-	// waitForPlayers(shmaddr);
+	waitForPlayers(shmaddr);
 	if (myOrder == 1)
 	{
 		initGame(shmaddr);
 		// printTeamPosition(shmaddr);
-		printMap(shmaddr);
-		// do a fork here
-		// launchGraphics(shmaddr);
-		
+		// printMap(shmaddr);
+
 		pid_t pid = fork();
 		if (pid == -1)
 		{
@@ -159,13 +158,15 @@ int main(int argc, char *argv[])
 		}
 		// launchGraphics();
 	}
+
 	usleep(50000);
-	launchGame(shmaddr, ft_atoi(argv[1]) - 1, &index);
+	// launchGame(shmaddr, ft_atoi(argv[1]) - 1, &index);
 	// Remove the shared memory segment if this is the last process
 	if (isLast(shmaddr) == true)
 	{
 		cleanSharedRessources(shmaddr);
 		printf("Clean shared ressources %d\n",myOrder);
+
 	}
 	printf("End of process %d\n", myOrder);
 	return 0;

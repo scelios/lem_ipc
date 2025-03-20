@@ -31,10 +31,10 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
 		}
 		*myOrder = 2;
 
-		printf("Attached to existing shared memory segment %d\n",*myOrder);
+		// printf("Attached to existing shared memory segment %d\n",*myOrder);
 	} else {
 		*myOrder = 1;
-		printf("Created new shared memory segment %d\n",*myOrder);
+		// printf("Created new shared memory segment %d\n",*myOrder);
 
 		// Set the size of the shared memory object
 		if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
@@ -84,6 +84,47 @@ short int minus(short int index)
 	return 0;
 }
 
+void doposition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
+{
+	int temp = index;
+	int i = 0;
+	int two_k = 2; //sum of 1 to n of 2k = n(n+1)
+	printf("index = %d, i = %d\n", index, i);
+	// return;
+	while (index > 0 && index >= two_k && i < 7)
+	{
+		index -= two_k;
+		two_k += 2;
+		i++;
+	}
+	// printf("index = %d, i = %d\n", index, i);
+
+
+	printf("index = %d, i = %d\n", index, i);
+	switch (team)
+	{
+	case 0:// up
+		player->x = MAP_SIZE / 2 + minus(index);
+		player->y = MAP_SIZE / 2 - i - 2;
+		break;
+	case 1: // right
+		player->x = MAP_SIZE / 2 + i + 1;
+		player->y = MAP_SIZE / 2 + minus(index);
+		break;
+	case 2: // down
+		player->x = MAP_SIZE / 2 + minus(index);
+		player->y = MAP_SIZE / 2 + i + 1;
+		break;
+	case 3: // left
+		player->x = MAP_SIZE / 2 - i - 2;
+		player->y = MAP_SIZE / 2 + minus(index);
+		break;
+	default:
+		break;
+	}
+	printf("Player placed: team %d, position x = %d, y = %d index = %d\n", team, player->x, player->y, temp);
+}
+
 void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
 {
 	const unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
@@ -117,7 +158,6 @@ void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index,
 	// shmaddr->map[player->x][player->y].team = team;
 	// shmaddr->map[player->x][player->y].player = player;
 	// printf("Map position x = %d, y = %d\n", shmaddr->map[player->x][player->y].player->x, shmaddr->map[player->x][player->y].player->y);
-
 }
 
 void initMap(sharedMemory *shmaddr)
@@ -164,16 +204,24 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 		}
 		exit(EXIT_FAILURE);
 	}
+	if (shmaddr->teams[team].nPlayers >= (MAX_PROCESSES / 4))
+	{
+		printf("Max number of processes in this team reached\n");
+		if (sem_post(sem) == -1) {
+			perror("sem_post");
+		}
+		exit(EXIT_FAILURE);
+	}
 	*myOrder = ++shmaddr->counter;
 	*index = shmaddr->teams[team].nPlayers++;
 	shmaddr->teams[team].isActive = true;
 	shmaddr->teams[team].players[*index].isActive = true;
 	shmaddr->teams[team].players[*index].willDie = false;
 	shmaddr->teams[team].players[*index].team = team;
-	if (*index <= 20){
-		printf("Myorder = %d\n", *myOrder);
-		doPosition(shmaddr, &shmaddr->teams[team].players[*index], *index, team);
-	}
+	printf("index = %d\n", *index);
+	doposition(shmaddr, &shmaddr->teams[team].players[*index], *index, team);
+
+
 
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
