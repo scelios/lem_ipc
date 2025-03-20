@@ -1,4 +1,5 @@
 *.o
+*.c.o.d
 *.out
 *.a
 test
@@ -6,5 +7,6 @@ test
 .vscode
 .vscode/*
 lemipc
+lib/MLX42/build
 42_lem-ipc/*
 42_lem-ipc
