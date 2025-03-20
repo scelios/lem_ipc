@@ -1,6 +1,8 @@
 CMakeFiles/mlx42.dir/lib/png/lodepng.c.o: \
- /root/lem_ipc/lib/MLX42/lib/png/lodepng.c /usr/include/stdc-predef.h \
- /root/lem_ipc/lib/MLX42/include/lodepng/lodepng.h /usr/include/string.h \
+ /home/hall/lem_ipc/lib/MLX42/lib/png/lodepng.c \
+ /usr/include/stdc-predef.h \
+ /home/hall/lem_ipc/lib/MLX42/include/lodepng/lodepng.h \
+ /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
