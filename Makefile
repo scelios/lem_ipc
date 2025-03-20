@@ -1,7 +1,6 @@
 NAME	:= lemipc
 # CFLAGS	:= -Wextra -Wall -Werror -Ofast -g -DDEBUG=1
 CFLAGS	:=  -Ofast -g -DDEBUG=1
-CC : gcc
 LIBMLX	:= ./lib/MLX42
 INCDIR = includes
 LGLFW_PATH := $(shell brew --prefix glfw)
