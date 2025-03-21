@@ -77,6 +77,7 @@ player *getPlayer(sharedMemory *shmaddr, int x, int y)
             }
         }
     }
+    return NULL;
 }
 
 void unselectPlayer(sharedMemory *shmaddr)
@@ -420,7 +421,7 @@ void	hook(void *mini)
     usleep(10000);
     if (shouldStop(shmaddr))
     {
-        printf("shoudl stop\n");
+        // printf("shoudl stop\n");
         mlx_close_window(screen->mlx);
     }
     // write(1, "hook\n", 5);
@@ -430,6 +431,7 @@ void	hook(void *mini)
     
     checkAlive(shmaddr);
     checkTeamAlive(shmaddr);
+    checkAtLeastTwoInOneTeam(shmaddr);
 
 }
 
@@ -445,7 +447,7 @@ void closeScreen(void *param)
     }
     shmaddr->end = true;
     shmaddr->changed = true;
-    printf("End by function\n");
+    // printf("End by function\n");
     if (sem_post(sem) == -1) {
         perror("sem_post");
         shmaddr->criticalError = true;

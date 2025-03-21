@@ -11,12 +11,12 @@ key_t keygen()
 {
     key_t key;
     // Generate the file if it does not exist
-    // int fd = open(SHM_KEY_PATH, O_CREAT, 0666);
-    // if (fd == -1) {
-    //     perror("open");
-    //     return -1;
-    // }
-    // close(fd);
+    int fd = open(SHM_KEY_PATH, O_CREAT, 0666);
+    if (fd == -1) {
+        perror("open");
+        return -1;
+    }
+    close(fd);
 
     if ((key = ftok(SHM_KEY_PATH, SHM_KEY_ID)) == -1) {
         perror("ftok");
@@ -73,15 +73,7 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
     }
     return true;
 }
-/*
-Return in function of the index:
-0 0
-1 1
-2 -1
-3 2
-4 -2
-5 3
-*/
+
 short int minus(short int index)
 {
     if (index % 2 == 0)
@@ -93,10 +85,10 @@ short int minus(short int index)
 
 void doposition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
 {
-    int temp = index;
     int i = 0;
     int two_k = 2; //sum of 1 to n of 2k = n(n+1)
-    // return;
+    
+    (void)shmaddr;
     while (index > 0 && index >= two_k && i < 7)
     {
         index -= two_k;
@@ -130,6 +122,7 @@ void doposition(sharedMemory *shmaddr, player *player, unsigned short int index,
 
 void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
 {
+    (void)shmaddr;
     const unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
                             {MAP_SIZE / 2, MAP_SIZE - 4},
                             {4, MAP_SIZE / 2},
@@ -163,18 +156,6 @@ void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index,
     // printf("Map position x = %d, y = %d\n", shmaddr->map[player->x][player->y].player->x, shmaddr->map[player->x][player->y].player->y);
 }
 
-void initMap(sharedMemory *shmaddr)
-{
-    for (unsigned short int i = 0; i < MAP_SIZE; i++)
-    {
-        for (unsigned short int j = 0; j < MAP_SIZE; j++)
-        {
-            // shmaddr->map[i][j].team = 0;
-            // shmaddr->map[i][j].player = NULL;
-        }
-    }
-}
-
 void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index)
 {
     if (sem_wait(sem) == -1) {
@@ -192,24 +173,22 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         shmaddr->changed = true;
         shmaddr->criticalError = false;
         shmaddr->end = false;
-        initMap(shmaddr);
         key_t key = keygen();
         int msqid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
         if (msqid == -1) {
             perror("msgget");
             exit(EXIT_FAILURE);
         }
-        printf("msqid = %d\n", msqid);
         shmaddr->msqid = msqid;
         for (unsigned short int i = 0; i < MAX_TEAM; i++)
         {
             shmaddr->teams[i].isActive = false;
             shmaddr->teams[i].nPlayers = 0;
         }
-            }
+    }
     if (shmaddr->counter >= MAX_PROCESSES)
     {
-        printf("Max number of processes reached\n");
+        // printf("Max number of processes reached\n");
         if (sem_post(sem) == -1) {
             perror("sem_post");
         }
@@ -217,7 +196,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     }
     if (shmaddr->teams[team].nPlayers >= (MAX_PROCESSES / 4))
     {
-        printf("Max number of processes in this team reached\n");
+        // printf("Max number of processes in this team reached\n");
         if (sem_post(sem) == -1) {
             perror("sem_post");
         }
@@ -232,7 +211,6 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     shmaddr->teams[team].players[*index].team = team;
     shmaddr->teams[team].players[*index].id = *myOrder;
     doposition(shmaddr, &shmaddr->teams[team].players[*index], *index, team);
-
 
 
     if (sem_post(sem) == -1) {

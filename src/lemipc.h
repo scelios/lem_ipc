@@ -18,6 +18,7 @@
 # include <sys/sem.h>
 # include <errno.h>
 # include <math.h>
+# include <time.h>
 
 # define SHM_KEY 65
 # define SHM_SIZE 1024
@@ -33,9 +34,9 @@
 # define EXIT_FAILURE 1
 
 # define SHM_NAME "/shm_example"
-# define SEM_NAME "/shmaddr_sem_my"
+# define SEM_NAME "/shmaddr_sem_me"
 
-#define SHM_KEY_PATH "/tmp/lemipc_key"
+#define SHM_KEY_PATH "/tmp/lemipc_ke"
 #define SHM_KEY_ID 65
 
 # define WIDTH 496
@@ -147,5 +148,6 @@ void movePlayer(sharedMemory *shmaddr,player *player, int x, int y);
 void sendDeathMessage(sharedMemory *shmaddr, player *player);
 void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y);
 void receiveMessage(sharedMemory *shmaddr, player *player);
+void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr);
 
 #endif

@@ -64,25 +64,57 @@ void cleanSharedRessources(sharedMemory *shmaddr)
         perror("munmap");
         exit(EXIT_FAILURE);
     }
-    // printf("shm_unlink %s\n",SHM_NAME);
-    // system("ls /dev/shm/*");
     shm_unlink(SHM_NAME);
     sem_unlink(SEM_NAME);
-    // if (shm_unlink(SHM_NAME) == -1) {
-    // 	perror("shm_unlink");
-    // 	// exit(EXIT_FAILURE);
-    // }
-    // if (sem_unlink(SEM_NAME) == -1) {
-    // 	perror("sem_unlink");
-    // 	// exit(EXIT_FAILURE);
-    // }
-    // return;
+}
+
+bool atLeastTwoplayerInOneTeam(sharedMemory *shmaddr)
+{
+    int teamNb = 0;
+
+    for (int i = 0; i < MAX_TEAM; i++)
+    {
+        teamNb = 0;
+        for (int j = 0; j < MAX_PROCESSES / 4; j++)
+        {
+            if (shmaddr->teams[i].players[j].isActive == true)
+            {
+                teamNb++;
+            }
+        }
+        if (teamNb >= 2)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool atLeastTwoTeam(sharedMemory *shmaddr)
+{
+    int teamNb = 0;
+
+    for (int i = 0; i < MAX_TEAM; i++)
+    {
+        if (shmaddr->teams[i].isActive == true)
+        {
+            teamNb++;
+        }
+        if (teamNb >= 2)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 void waitForPlayers(sharedMemory *shmaddr)
 {
     bool launch = false;
 
+    time_t start = time(NULL);
     while (launch != true) {
         if (sem_wait(sem) == -1) {
             perror("sem_wait");
@@ -90,7 +122,8 @@ void waitForPlayers(sharedMemory *shmaddr)
             exit(EXIT_FAILURE);
         }
         
-        if (shmaddr->counter >= 2)
+        if (shmaddr->counter >= 3 && atLeastTwoplayerInOneTeam(shmaddr) == true\
+        && atLeastTwoTeam(shmaddr) == true)
         {
             launch = true;
             shmaddr->launch = true;
@@ -101,6 +134,16 @@ void waitForPlayers(sharedMemory *shmaddr)
             exit(EXIT_FAILURE);
         }
         usleep(5000);
+        if (time(NULL) - start > 1)
+        {
+            printf("Timeout\n");
+            shmaddr->criticalError = true;
+            if (isLast(shmaddr) == true)
+            {
+                cleanSharedRessources(shmaddr);
+            }
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
@@ -135,15 +178,14 @@ int main(int argc, char *argv[])
     {
         exit(EXIT_FAILURE);
     }
-
+    // printf("myOrder %d\n", myOrder);
     // cleanSharedRessources(shmaddr);
     // return 0;
     initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
     waitForPlayers(shmaddr);
-    printf("After wait for players %d\n", myOrder);
+
     if (myOrder == 1)
     {
-        printf("initGame\n");
         initGame(shmaddr);
         // printTeamPosition(shmaddr);
         // printMap(shmaddr);
@@ -157,9 +199,7 @@ int main(int argc, char *argv[])
         }
         if (pid != 0)
         {
-            printf("launchGraphics\n");
             launchGraphics(shmaddr);
-            printf("End of graphics\n");
             exit(EXIT_SUCCESS);
         }
         // launchGraphics();
@@ -171,9 +211,6 @@ int main(int argc, char *argv[])
     if (isLast(shmaddr) == true)
     {
         cleanSharedRessources(shmaddr);
-        printf("Clean shared ressources %d\n",myOrder);
-
     }
-    printf("End of process %d\n", myOrder);
     return 0;
 }

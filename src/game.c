@@ -24,7 +24,7 @@ void printTeam(sharedMemory *shmaddr, int team)
 
 void checkThisPlayerAlive(sharedMemory *shmaddr, player *player)
 {
-    for (char i = 0; i < MAX_TEAM; i++)
+    for (int i = 0; i < MAX_TEAM; i++)
     {
         if (shmaddr->teams[i].isActive == false || i == player->team)
             continue;
@@ -51,7 +51,7 @@ void checkAlive(sharedMemory *shmaddr)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    for (char i = 0; i < MAX_TEAM; i++)
+    for (int i = 0; i < MAX_TEAM; i++)
     {
         if (shmaddr->teams[i].isActive == false)
             continue;
@@ -101,6 +101,37 @@ void killWillDie(sharedMemory *shmaddr)
     }
 }
 
+void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr)
+{
+    int teamNb = 0;
+    for (int i = 0; i < MAX_TEAM; i++)
+    {
+        teamNb = 0;
+        for (int j = 0; j < MAX_PROCESSES / 4; j++)
+        {
+            if (shmaddr->teams[i].players[j].isActive == true)
+            {
+                teamNb++;
+            }
+        }
+        if (teamNb >= 2)
+        {
+            return;
+        }
+    }
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    shmaddr->end = true;
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+}
+
 void checkTeamAlive(sharedMemory *shmaddr)
 {
     char oneAlive = 0;
@@ -109,7 +140,7 @@ void checkTeamAlive(sharedMemory *shmaddr)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    for (char i = 0; i < MAX_TEAM; i++)
+    for (int i = 0; i < MAX_TEAM; i++)
     {
         if (shmaddr->teams[i].isActive == false)
             continue;
@@ -154,7 +185,7 @@ void launchGame(sharedMemory *shmaddr, int team, int *index)
             // printf("Should stop %d %d %d\n",shouldStop,shmaddr->end ,player->isActive);
             if (shmaddr->teams[player->team].nPlayers == 0)
                 shmaddr->teams[player->team].isActive = false;
-            printf("I'm dead\n");
+            // printf("I'm dead\n");
         }
         // printf("Continue = %d end = %d player = %d\n", shouldStop, shmaddr->end, player->isActive);
         if (sem_post(sem) == -1) {
