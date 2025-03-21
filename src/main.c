@@ -182,6 +182,7 @@ int main(int argc, char *argv[])
     // cleanSharedRessources(shmaddr);
     // return 0;
     initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
+    
     waitForPlayers(shmaddr);
 
     if (myOrder == 1)

@@ -397,7 +397,7 @@ bool shouldStop(sharedMemory *shmaddr)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    check = shmaddr->criticalError == true || shmaddr->end == true;
+    check = shmaddr->criticalError == true || shmaddr->end == true || sigintReceived == true;
     // printf("Check %d %d %d\n",check,shmaddr->criticalError,shmaddr->end);
     if (sem_post(sem) == -1) {
         perror("sem_post");

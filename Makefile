@@ -12,6 +12,7 @@ SRCS	= 	./src/main.c \
 					./src/graphics.c \
 					./src/game.c \
 					./src/message.c \
+					./src/signal.c \
 
 OBJS	= ${SRCS:.c=.o}
 LIBFT	= ./lib/libft

@@ -169,7 +169,6 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     {
         shmaddr->launch = false;
         shmaddr->counter = 0;
-        shmaddr->wichToPlay = 0;
         shmaddr->changed = true;
         shmaddr->criticalError = false;
         shmaddr->end = false;
@@ -255,7 +254,6 @@ bool initGame(sharedMemory *shmaddr)
         }
         return false;
     }
-    shmaddr->wichToPlay = 1;
     if (sem_post(sem) == -1) {
         perror("sem_post");
         shmaddr->criticalError = true;

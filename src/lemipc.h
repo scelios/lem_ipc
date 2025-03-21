@@ -19,6 +19,7 @@
 # include <errno.h>
 # include <math.h>
 # include <time.h>
+# include <signal.h>
 
 # define SHM_KEY 65
 # define SHM_SIZE 1024
@@ -42,6 +43,7 @@
 # define WIDTH 496
 # define HEIGHT 496
 
+extern bool sigintReceived;
 extern sem_t *sem;
 typedef struct msg_buf {
     long mtype;
@@ -78,7 +80,7 @@ typedef struct map{
 /** 
 * @sem: semaphore
 * @counter: number of processes currently active
-* @wichToPlay: wich team is playing
+
 * @nTeams: number of teams
 * @players: array of players
 * @message: message to be sent
@@ -87,7 +89,6 @@ typedef struct sharedMemory{
     sem_t *sem;
     bool launch;
     unsigned short int counter;
-    unsigned short int wichToPlay;
     unsigned short int nTeams;
     // map map[MAP_SIZE][MAP_SIZE];
     team teams[MAX_TEAM];
@@ -149,5 +150,8 @@ void sendDeathMessage(sharedMemory *shmaddr, player *player);
 void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y);
 void receiveMessage(sharedMemory *shmaddr, player *player);
 void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr);
+
+
+void handleSigint(int sig);
 
 #endif
