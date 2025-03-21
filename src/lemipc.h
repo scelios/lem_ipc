@@ -35,13 +35,16 @@
 # define SHM_NAME "/shm_example"
 # define SEM_NAME "/shmaddr_sem_my"
 
+#define SHM_KEY_PATH "/tmp/lemipc_key"
+#define SHM_KEY_ID 65
+
 # define WIDTH 496
 # define HEIGHT 496
 
 extern sem_t *sem;
 typedef struct msg_buf {
-	long mtype;
-	char mtext[MSGSZ];
+    long mtype;
+    char mtext[MSGSZ];
 } message_buf;
 
 /*
@@ -51,23 +54,24 @@ typedef struct msg_buf {
 * @y: y position of the player
 */
 typedef struct player{
-	bool isActive;
-	bool isSelected;
-	bool willDie;
-	unsigned short int team;
-	unsigned short int x;
-	unsigned short int y;
+    bool isActive;
+    bool isSelected;
+    bool willDie;
+    int id;
+    unsigned short int team;
+    unsigned short int x;
+    unsigned short int y;
 } player;
 
 typedef struct team{
-	bool isActive;
-	player players[MAX_PROCESSES];
-	unsigned short int nPlayers;
+    bool isActive;
+    player players[MAX_PROCESSES];
+    unsigned short int nPlayers;
 } team;
 
 typedef struct map{
-	unsigned short int team;
-	struct player *player;
+    unsigned short int team;
+    struct player *player;
 } map;
 
 /** 
@@ -79,31 +83,32 @@ typedef struct map{
 * @message: message to be sent
 */
 typedef struct sharedMemory{
-	sem_t *sem;
-	bool launch;
-	unsigned short int counter;
-	unsigned short int wichToPlay;
-	unsigned short int nTeams;
-	// map map[MAP_SIZE][MAP_SIZE];
-	team teams[MAX_TEAM];
-	bool criticalError;
-	bool end;
-	bool changed;
-	// char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
+    sem_t *sem;
+    bool launch;
+    unsigned short int counter;
+    unsigned short int wichToPlay;
+    unsigned short int nTeams;
+    // map map[MAP_SIZE][MAP_SIZE];
+    team teams[MAX_TEAM];
+    bool criticalError;
+    bool end;
+    bool changed;
+    int msqid;
+    // char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
 
 typedef struct screen
 {
-	mlx_t			*mlx;
-	mlx_image_t		*img;
-	int32_t			width;
-	int32_t			height;
-	double			x;
-	double			y;
-	bool			moved;
-	bool			resized;
-	bool			isClicked;
-	sharedMemory	*shmaddr;
+    mlx_t			*mlx;
+    mlx_image_t		*img;
+    int32_t			width;
+    int32_t			height;
+    double			x;
+    double			y;
+    bool			moved;
+    bool			resized;
+    bool			isClicked;
+    sharedMemory	*shmaddr;
 }	screen;
 
 /* Ressources */
@@ -135,6 +140,12 @@ void killWillDie(sharedMemory *shmaddr);
 void checkAlive(sharedMemory *shmaddr);
 void checkTeamAlive(sharedMemory *shmaddr);
 
+void movePlayer(sharedMemory *shmaddr,player *player, int x, int y);
 
+
+/* message */
+void sendDeathMessage(sharedMemory *shmaddr, player *player);
+void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y);
+void receiveMessage(sharedMemory *shmaddr, player *player);
 
 #endif

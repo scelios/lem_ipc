@@ -116,8 +116,9 @@ player *getIsSelected(sharedMemory *shmaddr)
 void movePlayer(sharedMemory *shmaddr,player *player, int x, int y)
 {
     // shmaddr->map[player->x][player->y].player = NULL;
-    player->x = x;
-    player->y = y;
+    sendMoveMessage(shmaddr, player, x, y);
+    // player->x = x;
+    // player->y = y;
     // shmaddr->map[x][y].player = player;
     // printf("Player moved x = %d, y = %d\n", player->x, player->y);
 }
@@ -283,7 +284,7 @@ void putCadrillage(screen *screen)
         {
             if (i % cadrillage == 0 || j % cadrillage == 0)
                 mlx_put_pixel(screen->img, i, j, get_rgba(255, 0, 0, 255));
-        }
+            }
     }
 }
 
@@ -430,33 +431,6 @@ void	hook(void *mini)
     checkAlive(shmaddr);
     checkTeamAlive(shmaddr);
 
-    // shmaddr->changed = false;
-
-
-    // write(1, "putCadrillage\n", 14);
-    // mlx_texture_t* texture = mlx_load_png("forest.png");
-    // if (!texture)
-    //     perror("mlx_load_png");
-    
-    // // Convert texture to a displayable image
-    // mlx_image_t* img = mlx_texture_to_image(screen->mlx, texture);
-    // if (!img)
-    //     perror("mlx_texture_to_image");
-
-    // // Display the image
-    // if (mlx_image_to_window(screen->mlx, img, 0, 0) < 0)
-    //     perror("mlx_image_to_window");
-
-    // if (should_stop(screen))
-    // {
-    // 	free_param(&param);
-    // 	mlx_close_hook(screen->mlx, &close_function, screen);
-    // 	mlx_close_window(screen->mlx);
-    // 	return ;
-    // }
-    // if (something_changed(screen))
-    // 	reset_param(&param, screen);
-    // for_each_pixel(&param, screen);
 }
 
 void closeScreen(void *param)
