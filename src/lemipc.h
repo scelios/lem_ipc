@@ -34,16 +34,16 @@
 # define EXIT_SUCCESS 0
 # define EXIT_FAILURE 1
 
-# define SHM_NAME "/shm_example"
-# define SEM_NAME "/shmaddr_sem_me"
+# define SHM_NAME "/shm_exampleeeey"
+# define SEM_NAME "/shmaddr_sem_meeeey"
 
-#define SHM_KEY_PATH "/tmp/lemipc_ke"
+#define SHM_KEY_PATH "/tmp/lemipc_kee"
 #define SHM_KEY_ID 65
 
 # define WIDTH 496
 # define HEIGHT 496
 
-extern bool sigintReceived;
+extern bool *sigintReceived;
 extern sem_t *sem;
 typedef struct msg_buf {
     long mtype;

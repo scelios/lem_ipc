@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
     // cleanSharedRessources(shmaddr);
     // return 0;
     initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
-    
+    signal(SIGINT, handleSigint);
     waitForPlayers(shmaddr);
 
     if (myOrder == 1)
@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
         if (pid != 0)
         {
             launchGraphics(shmaddr);
+            printf("Graphics ended\n");
             exit(EXIT_SUCCESS);
         }
         // launchGraphics();

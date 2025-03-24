@@ -38,10 +38,10 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
         }
         *myOrder = 2;
 
-        // printf("Attached to existing shared memory segment %d\n",*myOrder);
+        printf("Attached to existing shared memory segment %d\n",*myOrder);
     } else {
         *myOrder = 1;
-        // printf("Created new shared memory segment %d\n",*myOrder);
+        printf("Created new shared memory segment %d\n",*myOrder);
 
         // Set the size of the shared memory object
         if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
@@ -120,42 +120,6 @@ void doposition(sharedMemory *shmaddr, player *player, unsigned short int index,
     }
 }
 
-void doPosition(sharedMemory *shmaddr, player *player, unsigned short int index, unsigned short int team)
-{
-    (void)shmaddr;
-    const unsigned short int tab[4][2] = {{MAP_SIZE / 2, 4}, 
-                            {MAP_SIZE / 2, MAP_SIZE - 4},
-                            {4, MAP_SIZE / 2},
-                            {MAP_SIZE - 4, MAP_SIZE / 2}};
-    unsigned short int rest = index / 5;
-    index = index % 5;
-    // printf("team = %d,index = %d, rest = %d\n",team, index, rest);
-    switch (team)
-    {
-    case 0:
-        player->x = tab[team][0] + minus(index);
-        player->y = tab[team][1] - rest;
-        break;
-    case 1:
-        player->x = tab[team][0] + minus(index);
-        player->y = tab[team][1] + rest;
-        break;
-    case 2:
-        player->x = tab[team][0] - rest;
-        player->y = tab[team][1] + minus(index);
-        break;
-    case 3:
-        player->x = tab[team][0] + rest;
-        player->y = tab[team][1] + minus(index);
-        break;
-    default:
-        break;
-    }
-    // shmaddr->map[player->x][player->y].team = team;
-    // shmaddr->map[player->x][player->y].player = player;
-    // printf("Map position x = %d, y = %d\n", shmaddr->map[player->x][player->y].player->x, shmaddr->map[player->x][player->y].player->y);
-}
-
 void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index)
 {
     if (sem_wait(sem) == -1) {
@@ -164,13 +128,13 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         exit(EXIT_FAILURE);
     }
 
-
     if (*myOrder == 1)
     {
         shmaddr->launch = false;
         shmaddr->counter = 0;
         shmaddr->changed = true;
         shmaddr->criticalError = false;
+        // static volatile sig_atomic_t *sigintReceived = NULL;
         shmaddr->end = false;
         key_t key = keygen();
         int msqid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
@@ -186,6 +150,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
             shmaddr->order[i] = 5;
         }
     }
+    sigintReceived = &shmaddr->criticalError;
     if (shmaddr->counter >= MAX_PROCESSES)
     {
         // printf("Max number of processes reached\n");

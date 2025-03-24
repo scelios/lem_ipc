@@ -179,7 +179,7 @@ void launchGame(sharedMemory *shmaddr, int team, int *index)
         // printf("Team nPlayers = %d team =%d\n", shmaddr->teams[player->team].nPlayers, player->team);
         // printf("Team = %d, Nplayers = %d\n", player->team, shmaddr->teams[player->team].nPlayers);
         // checkAlive(shmaddr, player);
-        shouldStop = (shmaddr->end == true || player->isActive == false);
+        shouldStop = (shmaddr->end == true || player->isActive == false || shmaddr->criticalError == true);
         if (shouldStop == true)
         {
             // printf("Should stop %d %d %d\n",shouldStop,shmaddr->end ,player->isActive);

@@ -184,7 +184,6 @@ unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
     int j = 0;
     for (int i = 0; i < MAX_TEAM; i++)
     {
-        printf("Order = %d\n",shmaddr->order[i]);
         if (order == shmaddr->order[i])
         {
             j = i;
@@ -195,7 +194,7 @@ unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
     {
         j = (j + 1) % MAX_TEAM;
     } while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
-    printf("j = %d is alive %d\n",j, shmaddr->teams[j].isActive);
+
     return (shmaddr->order[j]);
 }
 
@@ -229,11 +228,9 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
             exit(EXIT_FAILURE);
         }
         shmaddr->changed = true;
-        printf("xpos = %f, ypos = %f\n",xpos, ypos);
         if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
         {
             player *player = getIsSelected(shmaddr);
-            printf("Player selected %p wich to play :%d\n",player, shmaddr->wichToPlay);
             if (player != NULL && player->team == shmaddr->wichToPlay &&validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
             {
                 movePlayer(shmaddr,player, (int) xpos, (int) ypos);
@@ -423,7 +420,7 @@ bool shouldStop(sharedMemory *shmaddr)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    check = shmaddr->criticalError == true || shmaddr->end == true || sigintReceived == true;
+    check = shmaddr->criticalError == true || shmaddr->end == true;
     // printf("Check %d %d %d\n",check,shmaddr->criticalError,shmaddr->end);
     if (sem_post(sem) == -1) {
         perror("sem_post");
@@ -491,7 +488,7 @@ void launchGraphics(sharedMemory *shmaddr)
     screen.moved = false;
     screen.resized = false;
     screen.isClicked = false;
-
+    printf("Graphics launched\n");
     screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
     if (!screen.mlx)
     {
