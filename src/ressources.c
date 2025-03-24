@@ -56,21 +56,27 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
         perror("mmap");
         return false;
     }
-    if (*myOrder == 1) {
-        sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
-        if (sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
-    } else {
-        usleep(1000); //wait for the first process to create the semaphore
+    // if (*myOrder == 1) {
+    //     sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
+    //     printf("semC = %p\n", sem);
+    //     if (sem == SEM_FAILED) {
+    //         perror("sem_open");
+    //         return false;
+    //     }
+    // } 
+
+        
+    // else {
+        // usleep(1000); //wait for the first process to create the semaphore
         // Open the existing semaphore
-        sem = sem_open(SEM_NAME, 0);
-        if (sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
-    }
+    //     sem = sem_open(SEM_NAME, 1);
+    //     printf("sem = %p\n", sem);
+    //     if (sem == SEM_FAILED) {
+    //         perror("sem_open");
+    //         return false;
+    //     }
+    // }
+
     return true;
 }
 
@@ -122,6 +128,23 @@ void doposition(sharedMemory *shmaddr, player *player, unsigned short int index,
 
 void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index)
 {
+    // don't know why i need to have sem_unlink here
+    sem_unlink(SEM_NAME);
+    sem = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0644, 1);
+    if (sem == SEM_FAILED) {
+        if (errno == EEXIST) {
+            sem = sem_open(SEM_NAME, 0);
+            if (sem == SEM_FAILED) {
+                perror("sem_open (existing semaphore)");
+                shmaddr->criticalError = true;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            perror("sem_open");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
+    }
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;

@@ -153,16 +153,7 @@ void	cursor(double xpos, double ypos, void *param)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    // the player is selected if the cursor is on the player
-    // the player is in square in screen->width / MAP_SIZE
-    // if (screen->isClicked == false)
-    // 	return;
-    // screen->isClicked = false;
-    
-    // xpos = floor((floor(xpos) / ((double) screen->width / MAP_SIZE))) * ((double) screen->width / MAP_SIZE);
-    // ypos = floor((floor(ypos) / ((double) screen->height / MAP_SIZE))) * ((double) screen->height / MAP_SIZE);
-    // xpos = (xpos / (double) screen->width) * MAP_SIZE;
-    // ypos = (ypos / (double) screen->height) * MAP_SIZE;
+
     screen->x = xpos;
     screen->y = ypos;
     if (sem_wait(sem) == -1) {
@@ -283,13 +274,6 @@ void	keyhook(mlx_key_data_t keydata, void *param)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    // if (keydata.key == MLX_KEY_D && keydata.action != MLX_RELEASE)
-    // 	screen->camera.pos.x += speed;
-    // if (keydata.key == MLX_KEY_D || keydata.key == MLX_KEY_A
-    // 	|| keydata.key == MLX_KEY_SPACE || keydata.key == MLX_KEY_LEFT_CONTROL
-    // 	|| keydata.key == MLX_KEY_W || keydata.key == MLX_KEY_S
-    // 	|| keydata.key == MLX_KEY_Q)
-    // 	screen->moved = true;
     if (keydata.key == MLX_KEY_ESCAPE && keydata.action == MLX_PRESS)
     {
         mlx_close_window(screen->mlx);
@@ -492,7 +476,15 @@ void launchGraphics(sharedMemory *shmaddr)
     screen.resized = false;
     screen.isClicked = false;
     // printf("Graphics launched\n");
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        exit(EXIT_FAILURE);
+    }
     screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        exit(EXIT_FAILURE);
+    }
     if (!screen.mlx)
     {
         if (sem_wait(sem) == -1) {

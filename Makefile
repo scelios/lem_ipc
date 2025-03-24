@@ -1,5 +1,5 @@
 NAME	:= lemipc
-CFLAGS	:= -Wextra -Wall -Werror -Ofast -g -DDEBUG=1
+CFLAGS	:= -Wextra -Wall -Werror -O2 -g -DDEBUG=1
 LIBMLX	:= ./lib/MLX42
 INCDIR = includes
 LGLFW_PATH := /usr/lib/x86_64-linux-gnu/libglfw.so
