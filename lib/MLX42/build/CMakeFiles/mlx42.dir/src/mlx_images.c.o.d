@@ -1,7 +1,7 @@
 CMakeFiles/mlx42.dir/src/mlx_images.c.o: \
- /root/lem_ipc/lib/MLX42/src/mlx_images.c /usr/include/stdc-predef.h \
- /root/lem_ipc/lib/MLX42/include/MLX42/MLX42_Int.h \
- /root/lem_ipc/lib/MLX42/include/MLX42/MLX42.h \
+ /home/hall/lem_ipc/lib/MLX42/src/mlx_images.c /usr/include/stdc-predef.h \
+ /home/hall/lem_ipc/lib/MLX42/include/MLX42/MLX42_Int.h \
+ /home/hall/lem_ipc/lib/MLX42/include/MLX42/MLX42.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stddef.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
@@ -19,10 +19,11 @@ CMakeFiles/mlx42.dir/src/mlx_images.c.o: \
  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/stdbool.h \
- /root/lem_ipc/lib/MLX42/include/lodepng/lodepng.h /usr/include/string.h \
+ /home/hall/lem_ipc/lib/MLX42/include/lodepng/lodepng.h \
+ /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
- /root/lem_ipc/lib/MLX42/include/glad/glad.h \
- /root/lem_ipc/lib/MLX42/include/KHR/khrplatform.h \
+ /home/hall/lem_ipc/lib/MLX42/include/glad/glad.h \
+ /home/hall/lem_ipc/lib/MLX42/include/KHR/khrplatform.h \
  /usr/include/GLFW/glfw3.h /usr/include/stdlib.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
