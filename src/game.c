@@ -152,7 +152,7 @@ void checkTeamAlive(sharedMemory *shmaddr)
     if (oneAlive <= 1)
     {
         shmaddr->end = true;
-        // printf("Last one alive\n");
+        printf("Last one alive\n");
     }
     if (sem_post(sem) == -1) {
         perror("sem_post");

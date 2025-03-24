@@ -34,10 +34,10 @@
 # define EXIT_SUCCESS 0
 # define EXIT_FAILURE 1
 
-# define SHM_NAME "/shm_exampleeeey"
-# define SEM_NAME "/shmaddr_sem_meeeey"
+# define SHM_NAME "/shm_examplee"
+# define SEM_NAME "/shmaddr_sem_mee"
 
-#define SHM_KEY_PATH "/tmp/lemipc_kee"
+#define SHM_KEY_PATH "/tmp/lemipc_keye"
 #define SHM_KEY_ID 65
 
 # define WIDTH 496

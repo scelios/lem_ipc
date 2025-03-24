@@ -153,7 +153,16 @@ void	cursor(double xpos, double ypos, void *param)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-
+    // the player is selected if the cursor is on the player
+    // the player is in square in screen->width / MAP_SIZE
+    // if (screen->isClicked == false)
+    // 	return;
+    // screen->isClicked = false;
+    
+    // xpos = floor((floor(xpos) / ((double) screen->width / MAP_SIZE))) * ((double) screen->width / MAP_SIZE);
+    // ypos = floor((floor(ypos) / ((double) screen->height / MAP_SIZE))) * ((double) screen->height / MAP_SIZE);
+    // xpos = (xpos / (double) screen->width) * MAP_SIZE;
+    // ypos = (ypos / (double) screen->height) * MAP_SIZE;
     screen->x = xpos;
     screen->y = ypos;
     if (sem_wait(sem) == -1) {
@@ -185,7 +194,7 @@ unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
     {
         j = (j + 1) % MAX_TEAM;
     } while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
-    // printf("Next team %d\n", shmaddr->order[j]);
+
     return (shmaddr->order[j]);
 }
 
@@ -222,7 +231,6 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
         if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
         {
             player *player = getIsSelected(shmaddr);
-            // printf("Wich to play %d\n", shmaddr->wichToPlay);
             if (player != NULL && player->team == shmaddr->wichToPlay &&validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
             {
                 movePlayer(shmaddr,player, (int) xpos, (int) ypos);
@@ -242,8 +250,6 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
             unselectPlayer(shmaddr);
             // getPlayer(shmaddr, (int) xpos, (int) ypos)->isSelected = true;
             player *player = getPlayer(shmaddr, (int) xpos, (int) ypos);
-            // printf("Wich to play %d\n", shmaddr->wichToPlay);
-
             if (player->team == shmaddr->wichToPlay)
                 player->isSelected = true;
         }
@@ -274,6 +280,13 @@ void	keyhook(mlx_key_data_t keydata, void *param)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
+    // if (keydata.key == MLX_KEY_D && keydata.action != MLX_RELEASE)
+    // 	screen->camera.pos.x += speed;
+    // if (keydata.key == MLX_KEY_D || keydata.key == MLX_KEY_A
+    // 	|| keydata.key == MLX_KEY_SPACE || keydata.key == MLX_KEY_LEFT_CONTROL
+    // 	|| keydata.key == MLX_KEY_W || keydata.key == MLX_KEY_S
+    // 	|| keydata.key == MLX_KEY_Q)
+    // 	screen->moved = true;
     if (keydata.key == MLX_KEY_ESCAPE && keydata.action == MLX_PRESS)
     {
         mlx_close_window(screen->mlx);
@@ -475,16 +488,8 @@ void launchGraphics(sharedMemory *shmaddr)
     screen.moved = false;
     screen.resized = false;
     screen.isClicked = false;
-    // printf("Graphics launched\n");
-    if (sem_wait(sem) == -1) {
-        perror("sem_wait");
-        exit(EXIT_FAILURE);
-    }
+    printf("Graphics launched\n");
     screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
-    if (sem_post(sem) == -1) {
-        perror("sem_post");
-        exit(EXIT_FAILURE);
-    }
     if (!screen.mlx)
     {
         if (sem_wait(sem) == -1) {

@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
         if (pid != 0)
         {
             launchGraphics(shmaddr);
-            // printf("Graphics ended\n");
+            printf("Graphics ended\n");
             exit(EXIT_SUCCESS);
         }
         // launchGraphics();
