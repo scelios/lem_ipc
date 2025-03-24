@@ -38,10 +38,10 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
         }
         *myOrder = 2;
 
-        printf("Attached to existing shared memory segment %d\n",*myOrder);
+        // printf("Attached to existing shared memory segment %d\n",*myOrder);
     } else {
         *myOrder = 1;
-        printf("Created new shared memory segment %d\n",*myOrder);
+        // printf("Created new shared memory segment %d\n",*myOrder);
 
         // Set the size of the shared memory object
         if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
@@ -135,6 +135,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         shmaddr->changed = true;
         shmaddr->criticalError = false;
         // static volatile sig_atomic_t *sigintReceived = NULL;
+        shmaddr->wichToPlay = 0;
         shmaddr->end = false;
         key_t key = keygen();
         int msqid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
@@ -173,6 +174,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
     {
         shmaddr->order[shmaddr->wichToPlay++] = team;
+        // printf("order[%d] = %d\n", shmaddr->wichToPlay - 1, team);
     }
     shmaddr->teams[team].isActive = true;
     shmaddr->teams[team].players[*index].isActive = true;
@@ -215,18 +217,19 @@ bool initGame(sharedMemory *shmaddr)
         shmaddr->criticalError = true;
         exit(EXIT_FAILURE);
     }
-    if (checkTeam(shmaddr) == 0)
-    {
-        if (sem_post(sem) == -1) {
-            perror("sem_post");
-            shmaddr->criticalError = true;
-            exit(EXIT_FAILURE);
-        }
-        return false;
-    }
+    // if (checkTeam(shmaddr) == 0)
+    // {
+    //     if (sem_post(sem) == -1) {
+    //         perror("sem_post");
+    //         shmaddr->criticalError = true;
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     printf("Not enough team or not enough players in one team\n");
+    //     return false;
+    // }
     // shmaddr->wichToPlay = 1;
     shmaddr->wichToPlay = shmaddr->order[0];
-    printf("Team to play = %d\n", shmaddr->wichToPlay);
+    // printf("Team to play = %d\n", shmaddr->wichToPlay);
     if (sem_post(sem) == -1) {
         perror("sem_post");
         shmaddr->criticalError = true;

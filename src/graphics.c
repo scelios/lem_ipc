@@ -194,7 +194,7 @@ unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
     {
         j = (j + 1) % MAX_TEAM;
     } while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
-
+    // printf("Next team %d\n", shmaddr->order[j]);
     return (shmaddr->order[j]);
 }
 
@@ -231,6 +231,7 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
         if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
         {
             player *player = getIsSelected(shmaddr);
+            // printf("Wich to play %d\n", shmaddr->wichToPlay);
             if (player != NULL && player->team == shmaddr->wichToPlay &&validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
             {
                 movePlayer(shmaddr,player, (int) xpos, (int) ypos);
@@ -250,6 +251,8 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
             unselectPlayer(shmaddr);
             // getPlayer(shmaddr, (int) xpos, (int) ypos)->isSelected = true;
             player *player = getPlayer(shmaddr, (int) xpos, (int) ypos);
+            // printf("Wich to play %d\n", shmaddr->wichToPlay);
+
             if (player->team == shmaddr->wichToPlay)
                 player->isSelected = true;
         }
@@ -488,7 +491,7 @@ void launchGraphics(sharedMemory *shmaddr)
     screen.moved = false;
     screen.resized = false;
     screen.isClicked = false;
-    printf("Graphics launched\n");
+    // printf("Graphics launched\n");
     screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
     if (!screen.mlx)
     {
