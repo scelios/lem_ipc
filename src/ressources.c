@@ -183,7 +183,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         {
             shmaddr->teams[i].isActive = false;
             shmaddr->teams[i].nPlayers = 0;
-			shmaddr->order[i] = 5;
+            shmaddr->order[i] = 5;
         }
     }
     if (shmaddr->counter >= MAX_PROCESSES)
@@ -205,10 +205,10 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 
     *myOrder = ++shmaddr->counter;
     *index = shmaddr->teams[team].nPlayers++;
-	if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
-	{
-		shmaddr->order[shmaddr->wichToPlay++] = team;
-	}
+    if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
+    {
+        shmaddr->order[shmaddr->wichToPlay++] = team;
+    }
     shmaddr->teams[team].isActive = true;
     shmaddr->teams[team].players[*index].isActive = true;
     shmaddr->teams[team].players[*index].willDie = false;
@@ -245,27 +245,28 @@ unsigned short int checkTeam(sharedMemory *shmaddr)
 
 bool initGame(sharedMemory *shmaddr)
 {
-	if (sem_wait(sem) == -1) {
-		perror("sem_wait");
-		shmaddr->criticalError = true;
-		exit(EXIT_FAILURE);
-	}
-	if (shmaddr->nTeams = checkTeam(shmaddr) == 0)
-	{
-		if (sem_post(sem) == -1) {
-			perror("sem_post");
-			shmaddr->criticalError = true;
-			exit(EXIT_FAILURE);
-		}
-		return false;
-	}
-	// shmaddr->wichToPlay = 1;
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    if (checkTeam(shmaddr) == 0)
+    {
+        if (sem_post(sem) == -1) {
+            perror("sem_post");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
+        return false;
+    }
+    // shmaddr->wichToPlay = 1;
     shmaddr->wichToPlay = shmaddr->order[0];
-	if (sem_post(sem) == -1) {
-		perror("sem_post");
-		shmaddr->criticalError = true;
-		exit(EXIT_FAILURE);
-	}
-	return true;
+    printf("Team to play = %d\n", shmaddr->wichToPlay);
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    return true;
 }
 

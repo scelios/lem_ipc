@@ -97,6 +97,7 @@ typedef struct sharedMemory{
     bool end;
     bool changed;
     int msqid;
+    int wichToPlay;
     // char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
 

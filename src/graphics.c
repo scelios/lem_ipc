@@ -181,79 +181,81 @@ void	cursor(double xpos, double ypos, void *param)
 
 unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
 {
-	int j = 0;
-	for (int i = 0; i < MAX_TEAM; i++)
-	{
-		printf("Order = %d\n",shmaddr->order[i]);
-		if (order == shmaddr->order[i])
-		{
-			j = i;
-			break;
-		}
-	}
-	do
-	{
-		j = (j + 1) % MAX_TEAM;
-	} while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
-	printf("j = %d is alive %d\n",j, shmaddr->teams[j].isActive);
-	return (shmaddr->order[j]);
+    int j = 0;
+    for (int i = 0; i < MAX_TEAM; i++)
+    {
+        printf("Order = %d\n",shmaddr->order[i]);
+        if (order == shmaddr->order[i])
+        {
+            j = i;
+            break;
+        }
+    }
+    do
+    {
+        j = (j + 1) % MAX_TEAM;
+    } while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
+    printf("j = %d is alive %d\n",j, shmaddr->teams[j].isActive);
+    return (shmaddr->order[j]);
 }
 
 void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
         void *param)
 {
-	screen	*screen = (struct screen *)param;
-	sharedMemory	*shmaddr = screen->shmaddr;
-	double	xpos = screen->x, ypos = screen->y;
-	(void)mods;
-	if (sem_wait(sem) == -1) {
-		perror("sem_wait");
-		shmaddr->criticalError = true;
-		exit(EXIT_FAILURE);
-	}
-	shmaddr->changed = true;
-	if (sem_post(sem) == -1) {
-		perror("sem_post");
-		shmaddr->criticalError = true;
-		exit(EXIT_FAILURE);
-	}
-	xpos = floor((floor(xpos) / ((double) screen->width / MAP_SIZE))) * ((double) screen->width / MAP_SIZE);
-	ypos = floor((floor(ypos) / ((double) screen->height / MAP_SIZE))) * ((double) screen->height / MAP_SIZE);
-	xpos = (xpos / (double) screen->width) * MAP_SIZE;
-	ypos = (ypos / (double) screen->height) * MAP_SIZE;
-	if (button == MLX_MOUSE_BUTTON_LEFT && action != MLX_RELEASE)
-	{	
-		if (sem_wait(sem) == -1) {
-			perror("sem_wait");
-			shmaddr->criticalError = true;
-			exit(EXIT_FAILURE);
-		}
-		shmaddr->changed = true;
-		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
-		{
-			player *player = getIsSelected(shmaddr);
-			if (player != NULL && player->team == shmaddr->wichToPlay &&validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
-			{
-				movePlayer(shmaddr,player, (int) xpos, (int) ypos);
+    screen	*screen = (struct screen *)param;
+    sharedMemory	*shmaddr = screen->shmaddr;
+    double	xpos = screen->x, ypos = screen->y;
+    (void)mods;
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    shmaddr->changed = true;
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    xpos = floor((floor(xpos) / ((double) screen->width / MAP_SIZE))) * ((double) screen->width / MAP_SIZE);
+    ypos = floor((floor(ypos) / ((double) screen->height / MAP_SIZE))) * ((double) screen->height / MAP_SIZE);
+    xpos = (xpos / (double) screen->width) * MAP_SIZE;
+    ypos = (ypos / (double) screen->height) * MAP_SIZE;
+    if (button == MLX_MOUSE_BUTTON_LEFT && action != MLX_RELEASE)
+    {	
+        if (sem_wait(sem) == -1) {
+            perror("sem_wait");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
+        shmaddr->changed = true;
+        printf("xpos = %f, ypos = %f\n",xpos, ypos);
+        if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
+        {
+            player *player = getIsSelected(shmaddr);
+            printf("Player selected %p wich to play :%d\n",player, shmaddr->wichToPlay);
+            if (player != NULL && player->team == shmaddr->wichToPlay &&validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
+            {
+                movePlayer(shmaddr,player, (int) xpos, (int) ypos);
                 shmaddr->wichToPlay = getNextTeam(shmaddr, shmaddr->wichToPlay);
-			}
-			unselectPlayer(shmaddr);
-			if (sem_post(sem) == -1) {
-				perror("sem_post");
-				shmaddr->criticalError = true;
-				exit(EXIT_FAILURE);
-			}
-			return;
-		}
-		
-		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == true)
-		{
-			unselectPlayer(shmaddr);
-			// getPlayer(shmaddr, (int) xpos, (int) ypos)->isSelected = true;
+            }
+            unselectPlayer(shmaddr);
+            if (sem_post(sem) == -1) {
+                perror("sem_post");
+                shmaddr->criticalError = true;
+                exit(EXIT_FAILURE);
+            }
+            return;
+        }
+        
+        if (someoneThere(shmaddr, (int) xpos, (int) ypos) == true)
+        {
+            unselectPlayer(shmaddr);
+            // getPlayer(shmaddr, (int) xpos, (int) ypos)->isSelected = true;
             player *player = getPlayer(shmaddr, (int) xpos, (int) ypos);
-			if (player->team == shmaddr->wichToPlay)
-				player->isSelected = true;
-		}
+            if (player->team == shmaddr->wichToPlay)
+                player->isSelected = true;
+        }
 
         if (sem_post(sem) == -1) {
             perror("sem_post");
@@ -524,5 +526,5 @@ void launchGraphics(sharedMemory *shmaddr)
         perror("sem_post");
         exit(EXIT_FAILURE);
     }
-    write(1, "Graphics terminated\n", 20);
+    // write(1, "Graphics terminated\n", 20);
 }
