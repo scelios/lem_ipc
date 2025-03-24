@@ -63,11 +63,6 @@ typedef struct team{
 	unsigned short int nPlayers;
 } team;
 
-typedef struct map{
-	unsigned short int team;
-	struct player *player;
-} map;
-
 /** 
 * @sem: semaphore
 * @counter: number of processes currently active
@@ -80,6 +75,7 @@ typedef struct sharedMemory{
 	sem_t *sem;
 	bool launch;
 	unsigned short int counter;
+	unsigned short int order[MAX_TEAM];
 	unsigned short int wichToPlay;
 	unsigned short int nTeams;
 	// map map[MAP_SIZE][MAP_SIZE];

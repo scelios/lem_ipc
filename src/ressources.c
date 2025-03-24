@@ -154,6 +154,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 		{
 			shmaddr->teams[i].isActive = false;
 			shmaddr->teams[i].nPlayers = 0;
+			shmaddr->order[i] = 5;
 		}
 	}
 	if (shmaddr->counter >= MAX_PROCESSES)
@@ -166,6 +167,10 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	}
 	*myOrder = ++shmaddr->counter;
 	*index = shmaddr->teams[team].nPlayers++;
+	if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
+	{
+		shmaddr->order[shmaddr->wichToPlay++] = team;
+	}
 	shmaddr->teams[team].isActive = true;
 	shmaddr->teams[team].players[*index].isActive = true;
 	shmaddr->teams[team].players[*index].willDie = false;
@@ -182,23 +187,23 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
 	}
 }
 
-bool checkTeam(sharedMemory *shmaddr)
+unsigned short int checkTeam(sharedMemory *shmaddr)
 {
 	unsigned short int teamNb = 0;
 	bool atleast2 = false;
 
-	for (int i = 1; i <= MAX_TEAM; i++)
+	for (int i = 0; i < MAX_TEAM; i++)
 	{
 		if (shmaddr->teams[i].isActive == true)
 			teamNb++;
 		if (teamNb >= MAX_PROCESSES)
-			return false;
+			return 0;
 		if (shmaddr->teams[i].nPlayers >= 2)
 			atleast2 = true;
 	}
 	if (teamNb < 2 || atleast2 == false)
-		return false;
-	return true;
+		return 0;
+	return teamNb;
 }
 
 bool initGame(sharedMemory *shmaddr)
@@ -208,7 +213,7 @@ bool initGame(sharedMemory *shmaddr)
 		shmaddr->criticalError = true;
 		exit(EXIT_FAILURE);
 	}
-	if (checkTeam(shmaddr) == false)
+	if (shmaddr->nTeams = checkTeam(shmaddr) == 0)
 	{
 		if (sem_post(sem) == -1) {
 			perror("sem_post");
@@ -217,7 +222,8 @@ bool initGame(sharedMemory *shmaddr)
 		}
 		return false;
 	}
-	shmaddr->wichToPlay = 1;
+	
+	shmaddr->wichToPlay = shmaddr->order[0];
 	if (sem_post(sem) == -1) {
 		perror("sem_post");
 		shmaddr->criticalError = true;

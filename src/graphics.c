@@ -176,6 +176,26 @@ void	cursor(double xpos, double ypos, void *param)
 	// write(1, "cursor\n", 7);
 }
 
+unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order)
+{
+	int j = 0;
+	for (int i = 0; i < MAX_TEAM; i++)
+	{
+		printf("Order = %d\n",shmaddr->order[i]);
+		if (order == shmaddr->order[i])
+		{
+			j = i;
+			break;
+		}
+	}
+	do
+	{
+		j = (j + 1) % MAX_TEAM;
+	} while (shmaddr->order[j] == 5 || shmaddr->teams[j].isActive == false);
+	printf("j = %d is alive %d\n",j, shmaddr->teams[j].isActive);
+	return (shmaddr->order[j]);
+}
+
 void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 		void *param)
 {
@@ -199,7 +219,7 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 	xpos = (xpos / (double) screen->width) * MAP_SIZE;
 	ypos = (ypos / (double) screen->height) * MAP_SIZE;
 	if (button == MLX_MOUSE_BUTTON_LEFT && action != MLX_RELEASE)
-	{	
+	{
 		if (sem_wait(sem) == -1) {
 			perror("sem_wait");
 			shmaddr->criticalError = true;
@@ -209,9 +229,13 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == false)
 		{
 			player *player = getIsSelected(shmaddr);
-			if (player != NULL && validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
+			if (player != NULL && player->team == shmaddr->wichToPlay && validMove(shmaddr, player, (int) xpos, (int) ypos) == true)
 			{
 				movePlayer(shmaddr,player, (int) xpos, (int) ypos);
+				shmaddr->wichToPlay = getNextTeam(shmaddr, shmaddr->wichToPlay);
+				// shmaddr->wichToPlay++;
+				// shmaddr->wichToPlay = (shmaddr->wichToPlay) % shmaddr->nTeams;
+				printf("wich to play %d %d\n",shmaddr->wichToPlay, shmaddr->nTeams);
 			}
 			unselectPlayer(shmaddr);
 			if (sem_post(sem) == -1) {
@@ -225,7 +249,9 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
 		if (someoneThere(shmaddr, (int) xpos, (int) ypos) == true)
 		{
 			unselectPlayer(shmaddr);
-			getPlayer(shmaddr, (int) xpos, (int) ypos)->isSelected = true;
+			player *player = getPlayer(shmaddr, (int) xpos, (int) ypos);
+			if (player->team == shmaddr->wichToPlay)
+				player->isSelected = true;
 		}
 
 		if (sem_post(sem) == -1) {
@@ -415,7 +441,9 @@ void	hook(void *mini)
 	{
 		usleep(1000);
 	}
-	usleep(10000);
+	usleep(100000);
+	// printf("start nteams %d\n",shmaddr->nTeams);
+	// printf("wich to play %d\n",shmaddr->wichToPlay);
 	if (shouldStop(shmaddr))
 	{
 		printf("shoudl stop\n");
