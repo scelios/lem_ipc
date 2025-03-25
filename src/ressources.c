@@ -10,6 +10,13 @@
 key_t keygen()
 {
     key_t key;
+    // delete the file
+    if (remove(SHM_KEY_PATH) == -1) {
+        if (errno != ENOENT) {
+            perror("remove");
+            return -1;
+        }
+    }
     // Generate the file if it does not exist
     int fd = open(SHM_KEY_PATH, O_CREAT, 0666);
     if (fd == -1) {
@@ -55,21 +62,6 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
     if (*shmaddr == MAP_FAILED) {
         perror("mmap");
         return false;
-    }
-    if (*myOrder == 1) {
-        sem = sem_open(SEM_NAME, O_CREAT, 0644, 1);
-        if (sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
-    } else {
-        usleep(1000); //wait for the first process to create the semaphore
-        // Open the existing semaphore
-        sem = sem_open(SEM_NAME, 0);
-        if (sem == SEM_FAILED) {
-            perror("sem_open");
-            return false;
-        }
     }
     return true;
 }
@@ -122,6 +114,21 @@ void doposition(sharedMemory *shmaddr, player *player, unsigned short int index,
 
 void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *myOrder, int *index)
 {
+    sem = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0644, 1);
+    if (sem == SEM_FAILED) {
+        if (errno == EEXIST) {
+            sem = sem_open(SEM_NAME, 0);
+            if (sem == SEM_FAILED) {
+                perror("sem_open (existing semaphore)");
+                shmaddr->criticalError = true;
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            perror("sem_open");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
+    }
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;
@@ -139,8 +146,26 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         key_t key = keygen();
         int msqid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
         if (msqid == -1) {
-            perror("msgget");
-            exit(EXIT_FAILURE);
+            if (errno == EEXIST) {
+                // remove the message queue
+                msqid = msgget(key, 0666);
+                if (msqid == -1) {
+                    perror("msgget after EEXIST");
+                    exit(EXIT_FAILURE);
+                }
+                if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+                    perror("msgctl");
+                    exit(EXIT_FAILURE);
+                }
+                msqid = msgget(key, IPC_CREAT | IPC_EXCL | 0666);
+                if (msqid == -1) {
+                    perror("msgget after delete");
+                    exit(EXIT_FAILURE);
+                }
+            } else {
+                perror("msgget");
+                exit(EXIT_FAILURE);
+            }
         }
         shmaddr->msqid = msqid;
         for (unsigned short int i = 0; i < MAX_TEAM; i++)
@@ -194,7 +219,7 @@ unsigned short int checkTeam(sharedMemory *shmaddr)
     unsigned short int teamNb = 0;
     bool atleast2 = false;
 
-    for (int i = 1; i <= MAX_TEAM; i++)
+    for (int i = 0; i < MAX_TEAM ; i++)
     {
         if (shmaddr->teams[i].isActive == true)
             teamNb++;
@@ -226,7 +251,6 @@ bool initGame(sharedMemory *shmaddr)
     }
     // shmaddr->wichToPlay = 1;
     shmaddr->wichToPlay = shmaddr->order[0];
-    printf("Team to play = %d\n", shmaddr->wichToPlay);
     if (sem_post(sem) == -1) {
         perror("sem_post");
         shmaddr->criticalError = true;

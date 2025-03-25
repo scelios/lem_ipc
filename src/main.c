@@ -60,6 +60,12 @@ void cleanSharedRessources(sharedMemory *shmaddr)
         perror("msgctl");
         exit(EXIT_FAILURE);
     }
+    if (remove(SHM_KEY_PATH) == -1) {
+        if (errno != ENOENT) {
+            perror("remove");
+            exit(EXIT_FAILURE);
+        }
+    }
     if (munmap(shmaddr, sizeof(sharedMemory)) == -1) {
         perror("munmap");
         exit(EXIT_FAILURE);
@@ -201,7 +207,6 @@ int main(int argc, char *argv[])
         if (pid != 0)
         {
             launchGraphics(shmaddr);
-            printf("Graphics ended\n");
             exit(EXIT_SUCCESS);
         }
         // launchGraphics();

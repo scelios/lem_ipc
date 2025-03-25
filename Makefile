@@ -14,6 +14,8 @@ SRCS	= 	./src/main.c \
 					./src/message.c \
 					./src/signal.c \
 
+# SRCS	= 	./src/example.c 
+
 OBJS	= ${SRCS:.c=.o}
 LIBFT	= ./lib/libft
 

@@ -488,7 +488,6 @@ void launchGraphics(sharedMemory *shmaddr)
     screen.moved = false;
     screen.resized = false;
     screen.isClicked = false;
-    printf("Graphics launched\n");
     screen.mlx = mlx_init(screen.width, screen.height, "lemipc", true);
     if (!screen.mlx)
     {
