@@ -17,7 +17,6 @@ void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y)
     message_buf sbuf;
     sbuf.mtype = (long) player->id;
     sprintf(sbuf.mtext, "MOVE %d %d",x, y);
-    printf("Sending message %s\n", sbuf.mtext);
     // printf("msqid: %d, mtype: %ld, mtext: %s, size: %ld\n", 
         // shmaddr->msqid, sbuf.mtype, sbuf.mtext, strlen(sbuf.mtext) + 1);
     if (msgsnd(shmaddr->msqid, &sbuf, strlen(sbuf.mtext) + 1, IPC_NOWAIT) < 0) {

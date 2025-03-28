@@ -104,6 +104,7 @@ void killWillDie(sharedMemory *shmaddr)
 void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr)
 {
     int teamNb = 0;
+    int team2Player = 0;
     for (int i = 0; i < MAX_TEAM; i++)
     {
         teamNb = 0;
@@ -116,9 +117,13 @@ void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr)
         }
         if (teamNb >= 2)
         {
-            return;
+            team2Player++;
+            continue;
         }
+        
     }
+    if (team2Player >= 2)
+        return;
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;

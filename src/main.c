@@ -60,7 +60,6 @@ bool isLast(sharedMemory *shmaddr)
 
 void cleanSharedRessources(sharedMemory *shmaddr)
 {
-    printf("Cleaning shared ressources\n");
     if (sem_close(sem) == -1) {
         perror("sem_close");
         exit(EXIT_FAILURE);
@@ -92,7 +91,7 @@ void cleanSharedRessources(sharedMemory *shmaddr)
 bool atLeastTwoplayerInOneTeam(sharedMemory *shmaddr)
 {
     int teamNb = 0;
-
+    int team2Player = 0;
     for (int i = 0; i < MAX_TEAM; i++)
     {
         teamNb = 0;
@@ -105,10 +104,12 @@ bool atLeastTwoplayerInOneTeam(sharedMemory *shmaddr)
         }
         if (teamNb >= 2)
         {
-            return true;
+            team2Player++;
+            continue;
         }
     }
-
+    if (team2Player >= 2)
+        return true;
     return false;
 }
 
@@ -194,6 +195,7 @@ int main(int argc, char *argv[])
     sharedMemory *shmaddr;
     unsigned short int myOrder = 0;
     int index;
+
     if (checkArgs(argc, argv) == false \
     || getSharedRessources(&shmid, &shmaddr, &myOrder) == false)
     {
@@ -231,11 +233,11 @@ int main(int argc, char *argv[])
             shmaddr->criticalError = true;
             exit(EXIT_FAILURE);
         }
-        if (pid > 0) {
+        if (pid == 0) {
             int status;
             waitpid(pid, &status, 0);
         }
-        else if (pid == 0)
+        else if (pid != 0)
         {
             launchGraphics(shmaddr);
             exit(EXIT_SUCCESS);
@@ -254,7 +256,6 @@ int main(int argc, char *argv[])
     // Remove the shared memory segment if this is the last process
     if (isLast(shmaddr) == true)
     {
-        printf("Last process\n");
         cleanSharedRessources(shmaddr);
     }
     return 0;

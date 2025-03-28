@@ -142,6 +142,8 @@ void	cursor(double xpos, double ypos, void *param)
 {
     screen		*screen = (struct screen *)param;
     sharedMemory		*shmaddr = screen->shmaddr;
+    if (IA)
+        return;
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;
@@ -205,6 +207,8 @@ void	mousehook(mouse_key_t button, action_t action, modifier_key_t mods, \
     sharedMemory	*shmaddr = screen->shmaddr;
     double	xpos = screen->x, ypos = screen->y;
     (void)mods;
+    if (IA)
+        return;
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;
@@ -421,6 +425,7 @@ bool shouldStop(sharedMemory *shmaddr)
         exit(EXIT_FAILURE);
     }
     check = shmaddr->criticalError == true || shmaddr->end == true;
+    check = check || atLeastTwoplayerInOneTeam(shmaddr) == false || atLeastTwoTeam(shmaddr) == false;
     // printf("Check %d %d %d\n",check,shmaddr->criticalError,shmaddr->end);
     if (sem_post(sem) == -1) {
         perror("sem_post");
@@ -455,7 +460,6 @@ void	hook(void *mini)
     checkAlive(shmaddr);
     checkTeamAlive(shmaddr);
     checkAtLeastTwoInOneTeam(shmaddr);
-
 }
 
 void closeScreen(void *param)
@@ -482,7 +486,6 @@ void launchGraphics(sharedMemory *shmaddr)
 {
     // return;
     screen screen;
-    printf("In graphics SHOULD BE ONLY ONE%d\n", shmaddr->counter);
     screen.width = WIDTH;
     screen.height = HEIGHT;
     screen.shmaddr = shmaddr;

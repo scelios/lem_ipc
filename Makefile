@@ -1,5 +1,6 @@
 NAME	:= lemipc
 CFLAGS	:= -Wextra -Wall -Werror -Ofast -g -DDEBUG=1
+IAFLAGS := -Wextra -Wall -Werror -Ofast -DIA=1
 LIBMLX	:= ./lib/MLX42
 INCDIR = includes
 LGLFW_PATH := /usr/lib/x86_64-linux-gnu/libglfw.so
@@ -12,7 +13,7 @@ SRCS	= 	./src/main.c \
 					./src/graphics.c \
 					./src/game.c \
 					./src/message.c \
-					./src/signal.c \
+					./src/signal.c 
 
 # SRCS	= 	./src/example.c 
 
@@ -30,6 +31,11 @@ libmlx:
 $(NAME): $(OBJS)
 	@make -C ${LIBFT}
 	@$(CC) $(OBJS) $(LIBS) $(HEADERS) -o $(NAME) && printf "Linking: $(NAME)\n"
+
+# ia: CFLAGS = $(IAFLAGS)
+# ia: fclean $(OBJS)
+# 	@make -C ${LIBFT}
+# 	$(CC) $(OBJS) $(LIBS) $(HEADERS) $(CFLAGS) -o $(NAME) && printf "Linking: $(NAME)\n"
 
 clean:
 	@make -C $(LIBFT) clean

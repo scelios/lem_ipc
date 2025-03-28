@@ -33,6 +33,14 @@
 
 # define MSGSZ 128
 
+#ifndef IA
+    #ifdef IA
+
+    #else
+        #define IA 0
+    #endif
+#endif
+
 # define EXIT_SUCCESS 0
 # define EXIT_FAILURE 1
 
@@ -156,7 +164,11 @@ void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y);
 void receiveMessage(sharedMemory *shmaddr, player *player);
 void checkAtLeastTwoInOneTeam(sharedMemory *shmaddr);
 
+bool validMove(sharedMemory *shmaddr, player *player, int x, int y);
+
+unsigned short int getNextTeam(sharedMemory *shmaddr, unsigned short int order);
+bool atLeastTwoplayerInOneTeam(sharedMemory *shmaddr);
+bool atLeastTwoTeam(sharedMemory *shmaddr);
 
 void handleSigint(int sig);
-
 #endif

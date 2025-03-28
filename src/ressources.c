@@ -46,7 +46,6 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
         *myOrder = 2;
     } else {
         *myOrder = 1;
-        printf("Shared memory object created\n");
         // Set the size of the shared memory object
         if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
             perror("ftruncate");
@@ -193,8 +192,6 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     }
 
     *myOrder = ++shmaddr->counter;
-    if (shmaddr->counter < 2)
-        printf("Counter = %d\n", shmaddr->counter);
     *index = shmaddr->teams[team].nPlayers++;
     if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
     {
