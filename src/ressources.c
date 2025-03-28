@@ -44,12 +44,9 @@ bool getSharedRessources(int *shm_fd, sharedMemory **shmaddr, unsigned short int
             return false;
         }
         *myOrder = 2;
-
-        // printf("Attached to existing shared memory segment %d\n",*myOrder);
     } else {
         *myOrder = 1;
-        // printf("Created new shared memory segment %d\n",*myOrder);
-
+        printf("Shared memory object created\n");
         // Set the size of the shared memory object
         if (ftruncate(*shm_fd, sizeof(sharedMemory)) == -1) {
             perror("ftruncate");
@@ -129,6 +126,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
             exit(EXIT_FAILURE);
         }
     }
+
     if (sem_wait(sem) == -1) {
         perror("sem_wait");
         shmaddr->criticalError = true;
@@ -141,6 +139,7 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
         shmaddr->counter = 0;
         shmaddr->changed = true;
         shmaddr->criticalError = false;
+        shmaddr->launchGraphics = false;
         // static volatile sig_atomic_t *sigintReceived = NULL;
         shmaddr->end = false;
         key_t key = keygen();
@@ -194,6 +193,8 @@ void initSharedRessources(sharedMemory *shmaddr,int team, unsigned short int *my
     }
 
     *myOrder = ++shmaddr->counter;
+    if (shmaddr->counter < 2)
+        printf("Counter = %d\n", shmaddr->counter);
     *index = shmaddr->teams[team].nPlayers++;
     if (shmaddr->teams[team].isActive == false && shmaddr->wichToPlay < MAX_TEAM)
     {
@@ -242,11 +243,11 @@ bool initGame(sharedMemory *shmaddr)
     }
     if (checkTeam(shmaddr) == 0)
     {
-        if (sem_post(sem) == -1) {
-            perror("sem_post");
-            shmaddr->criticalError = true;
-            exit(EXIT_FAILURE);
-        }
+        // if (sem_post(sem) == -1) {
+        //     perror("sem_post");
+        //     shmaddr->criticalError = true;
+        //     exit(EXIT_FAILURE);
+        // }
         return false;
     }
     // shmaddr->wichToPlay = 1;

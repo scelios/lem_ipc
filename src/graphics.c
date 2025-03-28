@@ -482,6 +482,7 @@ void launchGraphics(sharedMemory *shmaddr)
 {
     // return;
     screen screen;
+    printf("In graphics SHOULD BE ONLY ONE%d\n", shmaddr->counter);
     screen.width = WIDTH;
     screen.height = HEIGHT;
     screen.shmaddr = shmaddr;

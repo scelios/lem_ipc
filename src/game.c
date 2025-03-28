@@ -164,7 +164,6 @@ void checkTeamAlive(sharedMemory *shmaddr)
 void launchGame(sharedMemory *shmaddr, int team, int *index)
 {
     bool shouldStop = false;
-    
 
     while (shouldStop == false)
     {

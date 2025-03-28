@@ -20,6 +20,8 @@
 # include <math.h>
 # include <time.h>
 # include <signal.h>
+# include <sys/wait.h>
+
 
 # define SHM_KEY 65
 # define SHM_SIZE 1024
@@ -98,6 +100,7 @@ typedef struct sharedMemory{
     bool changed;
     int msqid;
     int wichToPlay;
+    bool launchGraphics;
     // char message[SHM_SIZE - sizeof(int) - sizeof(int) * MAX_PROCESSES];
 } sharedMemory;
 

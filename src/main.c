@@ -43,15 +43,24 @@ bool checkArgs(int argc, char *argv[])
 bool isLast(sharedMemory *shmaddr)
 {
     bool last = false;
-    sem_wait(sem);
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
     shmaddr->counter--;
     last = shmaddr->counter == 0;
-    sem_post(sem);
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
     return (last);
 }
 
 void cleanSharedRessources(sharedMemory *shmaddr)
 {
+    printf("Cleaning shared ressources\n");
     if (sem_close(sem) == -1) {
         perror("sem_close");
         exit(EXIT_FAILURE);
@@ -70,8 +79,14 @@ void cleanSharedRessources(sharedMemory *shmaddr)
         perror("munmap");
         exit(EXIT_FAILURE);
     }
-    shm_unlink(SHM_NAME);
-    sem_unlink(SEM_NAME);
+    if (shm_unlink(SHM_NAME) == -1) {
+        perror("shm_unlink");
+        exit(EXIT_FAILURE);
+    }
+    if (sem_unlink(SEM_NAME) == -1) {
+        perror("sem_unlink");
+        exit(EXIT_FAILURE);
+    }
 }
 
 bool atLeastTwoplayerInOneTeam(sharedMemory *shmaddr)
@@ -139,7 +154,7 @@ void waitForPlayers(sharedMemory *shmaddr)
             shmaddr->criticalError = true;
             exit(EXIT_FAILURE);
         }
-        usleep(5000);
+        // usleep(5000);
         if (time(NULL) - start > 1)
         {
             printf("Timeout\n");
@@ -187,12 +202,24 @@ int main(int argc, char *argv[])
     // printf("myOrder %d\n", myOrder);
     // cleanSharedRessources(shmaddr);
     // return 0;
+    // printf("Myorder %d\n", myOrder);
     initSharedRessources(shmaddr, ft_atoi(argv[1]) - 1, &myOrder, &index); //set the default team to 0
     signal(SIGINT, handleSigint);
     waitForPlayers(shmaddr);
-
-    if (myOrder == 1)
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        shmaddr->criticalError = true;
+        exit(EXIT_FAILURE);
+    }
+    if (shmaddr->launchGraphics == false)
     {
+        shmaddr->launchGraphics = true;
+
+        if (sem_post(sem) == -1) {
+            perror("sem_post");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
         initGame(shmaddr);
         // printTeamPosition(shmaddr);
         // printMap(shmaddr);
@@ -204,19 +231,30 @@ int main(int argc, char *argv[])
             shmaddr->criticalError = true;
             exit(EXIT_FAILURE);
         }
-        if (pid != 0)
+        if (pid > 0) {
+            int status;
+            waitpid(pid, &status, 0);
+        }
+        else if (pid == 0)
         {
             launchGraphics(shmaddr);
             exit(EXIT_SUCCESS);
         }
-        // launchGraphics();
+    }
+    else
+    {
+        if (sem_post(sem) == -1) {
+            perror("sem_post");
+            shmaddr->criticalError = true;
+            exit(EXIT_FAILURE);
+        }
     }
 
-    usleep(50000);
     launchGame(shmaddr, ft_atoi(argv[1]) - 1, &index);
     // Remove the shared memory segment if this is the last process
     if (isLast(shmaddr) == true)
     {
+        printf("Last process\n");
         cleanSharedRessources(shmaddr);
     }
     return 0;

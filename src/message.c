@@ -17,6 +17,7 @@ void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y)
     message_buf sbuf;
     sbuf.mtype = (long) player->id;
     sprintf(sbuf.mtext, "MOVE %d %d",x, y);
+    printf("Sending message %s\n", sbuf.mtext);
     // printf("msqid: %d, mtype: %ld, mtext: %s, size: %ld\n", 
         // shmaddr->msqid, sbuf.mtype, sbuf.mtext, strlen(sbuf.mtext) + 1);
     if (msgsnd(shmaddr->msqid, &sbuf, strlen(sbuf.mtext) + 1, IPC_NOWAIT) < 0) {
@@ -28,8 +29,9 @@ void sendMoveMessage(sharedMemory *shmaddr, player *player, int x, int y)
 void receiveMessage(sharedMemory *shmaddr, player *player)
 {
     message_buf rbuf;
-    if (msgrcv(shmaddr->msqid, &rbuf, MSGSZ, player->id, IPC_NOWAIT) < 0) {
+    if (msgrcv(shmaddr->msqid, &rbuf, MSGSZ,(long) player->id, IPC_NOWAIT) < 0) {
         if (errno != ENOMSG) {
+            printf("msqid: %d, mtype: %d\n", shmaddr->msqid, player->id);
             perror("msgrcv");
             exit(EXIT_FAILURE);
         }
