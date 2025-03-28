@@ -13,7 +13,8 @@ LemIPC is a multiplayer game simulation that uses shared memory to enable commun
 1. Compile the project using the provided `Makefile`:
    make
 2. Run the game with the desired number of teams (between 1 and 4):
-    ./lemipc <number_of_teams> & ./lemipc <number_of_teams> & ...
+    ./lemipc <team> & ./lemipc <teams> & ...
+(you should used ./lemipc <teams> & wait 0.001 if you used a large number of threads simultanously)
 
 ## Unit Tests
 To run the unit tests:

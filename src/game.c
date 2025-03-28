@@ -83,6 +83,8 @@ void killWillDie(sharedMemory *shmaddr)
             if (shmaddr->teams[i].players[j].isActive == true && shmaddr->teams[i].players[j].willDie == true)
             {
                 sendDeathMessage(shmaddr, &shmaddr->teams[i].players[j]);
+                if (shmaddr->wichToPlay == i)
+                    shmaddr->wichToPlay = getNextTeam(shmaddr, i);
             }
             // if (shmaddr->teams[i].players[j].isActive == true && shmaddr->teams[i].players[j].willDie == true)
             // {

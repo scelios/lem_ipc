@@ -456,7 +456,6 @@ void	hook(void *mini)
     printBlack(screen);
     putCadrillage(screen);
     putPlayer(screen, screen->shmaddr);
-    
     checkAlive(shmaddr);
     checkTeamAlive(shmaddr);
     checkAtLeastTwoInOneTeam(shmaddr);
